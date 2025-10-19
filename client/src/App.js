@@ -1,5 +1,6 @@
 import React from 'react';
 import './index.css';
+import './App.css';
 import { Route, Routes } from 'react-router-dom';
 import NavBar from './components/layout/NavBar';
 import PrivateRoute from './components/routing/PrivateRoute';
@@ -17,8 +18,8 @@ function App() {
  return (
     <>
       <NavBar />
-      {/* FIX: This container pushes all content down 60px to clear the fixed NavBar */}
-      <div style={{ paddingTop: '60px' }}>
+      {/* FIX: Using the CSS class to clear the fixed NavBar */}
+      <div className="fixed-navbar-offset">
         <div className="container-fluid"> {/* Max-width container for content */}
           <Routes>
             {/* Public Routes */}

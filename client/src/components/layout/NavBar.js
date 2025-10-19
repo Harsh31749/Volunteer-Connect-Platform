@@ -11,50 +11,36 @@ const NavBar = () => {
         navigate('/');
     };
 
-    const navLinkStyle = { 
-        padding: '0 15px', 
-        fontSize: '15px', 
-        fontWeight: 600,
-        color: 'var(--color-text)'
-    };
-    const buttonStyle = { 
-        padding: '8px 16px', 
-        borderRadius: '4px',
-        fontWeight: 600,
-        transition: 'background-color 0.2s'
-    };
+    // Removed navLinkStyle and buttonStyle objects
 
     return (
-        <nav style={{
-            backgroundColor: 'var(--color-card-bg)', 
-            boxShadow: '0 2px 10px var(--color-shadow)', 
-            height: '60px', 
-            display: 'flex', 
-            alignItems: 'center',
-            position: 'fixed', 
-            top: 0, 
-            width: '100%', 
-            zIndex: 100 
-        }}>
-            <div className="container-fluid" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Link to="/" style={{ color: 'var(--color-primary)', fontSize: '20px', fontWeight: 700 }}>
-                    <i className="fas fa-hands-helping" style={{ marginRight: '8px' }}></i> Volunteer Connect
+        // Replaced inline styles with 'navbar-container' class
+        <nav className="navbar-container">
+            {/* Replaced inline styles with 'navbar-content' class */}
+            <div className="container-fluid navbar-content">
+                {/* Replaced inline styles with 'brand-link' and 'brand-icon' classes */}
+                <Link to="/" className="brand-link">
+                    <i className="fas fa-hands-helping brand-icon"></i> Volunteer Connect
                 </Link>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                {/* Replaced inline styles with 'nav-links-group' class */}
+                <div className="nav-links-group">
                     {/* Dynamic Links */}
                     {user ? (
                         <>
-                            {user.role === 'volunteer' && <Link style={navLinkStyle} to="/dashboard/volunteer">Dashboard</Link>}
-                            {user.role === 'ngo' && <Link style={navLinkStyle} to="/dashboard/ngo">Host Panel</Link>}
-                            <button onClick={handleLogout} style={{ ...buttonStyle, backgroundColor: '#f0f0f0', color: 'var(--color-text)' }}>
+                            {/* Using the new 'nav-link' and 'btn-base' classes */}
+                            {user.role === 'volunteer' && <Link className="nav-link" to="/dashboard/volunteer">Dashboard</Link>}
+                            {user.role === 'ngo' && <Link className="nav-link" to="/dashboard/ngo">Host Panel</Link>}
+                            {/* Combined btn-base with btn-light-neutral */}
+                            <button onClick={handleLogout} className="btn-base btn-light-neutral">
                                 Logout
                             </button>
                         </>
                     ) : (
                         <>
-                            <Link style={{ ...buttonStyle, border: '1px solid var(--color-primary)', color: 'var(--color-primary)' }} to="/login">Login</Link>
-                            <Link style={{ ...buttonStyle, backgroundColor: 'var(--color-secondary)', color: 'white' }} to="/register">Register</Link>
+                            {/* Combined btn-base with btn-primary-outline and btn-secondary */}
+                            <Link className="btn-base btn-primary-outline" to="/login">Login</Link>
+                            <Link className="btn-base btn-secondary" to="/register">Register</Link>
                         </>
                     )}
                 </div>
@@ -63,4 +49,4 @@ const NavBar = () => {
     );
 };
 
-export default NavBar; 
+export default NavBar;

@@ -5,6 +5,7 @@ const session = require('express-session');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('./models/User');
+const jwt = require('jsonwebtoken');
 
 
 require('dotenv').config();
@@ -13,7 +14,6 @@ const app = express();
 
 const connectDB = async () => {
     try {
-        // MODIFIED: Added recommended connection options
         await mongoose.connect(process.env.MONGO_URI, {
              useNewUrlParser: true,
              useUnifiedTopology: true
@@ -37,7 +37,7 @@ app.use(passport.session());
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: process.env.GOOGLE_CALLBACK_URL || "http://localhost:3000/auth/google/callback",
+  callbackURL: process.env.GOOGLE_CALLBACK_URL || "http://localhost:5000/auth/google/callback",
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     const email = profile.emails[0].value;
@@ -84,6 +84,28 @@ if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'developme
         res.sendFile(path.resolve(__dirname, '..', 'client', 'build', 'index.html'));
     });
 }
+
+app.get('/auth/google',
+  passport.authenticate('google', { scope: ['profile', 'email'] })
+);
+
+
+app.get('/auth/google/callback',
+  passport.authenticate('google', { failureRedirect: '/login', session: false }),
+  (req, res) => {
+    const user = req.user;
+    const token = jwt.sign(
+      { id: user._id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    console.log('Generated token:', token);  // <-- Add this to confirm token creation
+
+    res.redirect(`http://localhost:3000/social-login-success?token=${token}`);
+  }
+);
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
