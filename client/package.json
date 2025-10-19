@@ -2,7 +2,6 @@
   "name": "client",
   "version": "0.1.0",
   "private": true,
-  "proxy": "http://localhost:5000",
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.1.0",
     "@react-oauth/google": "^0.12.2",
@@ -19,6 +18,7 @@
     "tailwind": "^2.3.1",
     "web-vitals": "^5.1.0"
   },
+  "proxy": "http://localhost:5000",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",

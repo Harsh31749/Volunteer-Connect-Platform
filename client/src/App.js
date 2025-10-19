@@ -12,15 +12,16 @@ import VolunteerDashboard from './components/dashboard/VolunteerDashboard';
 import NGODashboard from './components/dashboard/NGODashboard';
 import ProfileSettings from './components/profile/ProfileSettings';
 import CertificateVerifier from './components/profile/CertificateVerifier';
+import SocialLoginSuccess from './components/auth/SocialLoginSuccess'; 
+
 
 function App() {
  
  return (
     <>
       <NavBar />
-      {/* FIX: Using the CSS class to clear the fixed NavBar */}
       <div className="fixed-navbar-offset">
-        <div className="container-fluid"> {/* Max-width container for content */}
+        <div className="container-fluid"> 
           <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
@@ -28,6 +29,8 @@ function App() {
             <Route path="/" element={<EventBrowser />} /> 
             <Route path="/events/:id" element={<EventDetails />} /> 
             <Route path="/verify" element={<CertificateVerifier />} />
+            {/* FIX: Route for handling server-side Google OAuth redirect */}
+            <Route path="/social-login-success" element={<SocialLoginSuccess />} /> 
             
             {/* Private Routes (Protected by role) */}
             <Route path="/settings" element={<PrivateRoute component={ProfileSettings} allowedRoles={['volunteer', 'ngo']} />} />

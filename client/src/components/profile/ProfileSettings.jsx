@@ -15,6 +15,7 @@ const ProfileSettings = () => {
     const [message, setMessage] = useState('');
 
     useEffect(() => {
+        // Only fetch profile data once the global authentication state is resolved and a user is available
         if (!authLoading && user) {
             fetchProfile();
         }
@@ -22,12 +23,14 @@ const ProfileSettings = () => {
 
     const fetchProfile = async () => {
         try {
-            // Fetch the current user's full profile data
+            // Fetch the current user's full profile data using the secured GET /api/users/profile route
             const res = await axios.get('/api/users/profile');
             const { name, email, ngoName } = res.data;
+            
             // Populate form state with fetched data
             setFormData({ name, email, ngoName: ngoName || '' });
         } catch (err) {
+            console.error("Profile fetch error:", err);
             setError('Failed to fetch profile data.');
         } finally {
             setLoading(false);
@@ -44,12 +47,21 @@ const ProfileSettings = () => {
         const dataToUpdate = {
             name: formData.name,
         };
+        
+        // Conditionally include ngoName for NGO roles
         if (user.role === 'ngo') {
+            if (!formData.ngoName) {
+                return setError('Organization Name is required for NGO accounts.');
+            }
             dataToUpdate.ngoName = formData.ngoName;
         }
 
         try {
+            // Submit data to the secured PUT /api/users/profile route
             await axios.put('/api/users/profile', dataToUpdate);
+            
+            // NOTE: The AuthContext should ideally be updated here (e.g., re-run loadUserProfile) 
+            // but the current implementation requires a full page refresh or relogin to see the name update in the NavBar.
             setMessage('Profile updated successfully!');
         } catch (err) {
             setError(err.response?.data?.msg || 'Failed to update profile.');
@@ -57,7 +69,7 @@ const ProfileSettings = () => {
     };
 
     if (loading || authLoading) return <h1 style={{textAlign: 'center', fontSize: '20px', marginTop: '50px'}}>Loading profile settings...</h1>;
-    if (error) return <div style={{color: 'white', backgroundColor: '#dc3545', padding: '10px', borderRadius: '4px', maxWidth: '600px', margin: '50px auto'}}>{error}</div>;
+    if (error && !message) return <div style={{color: 'white', backgroundColor: '#dc3545', padding: '10px', borderRadius: '4px', maxWidth: '600px', margin: '50px auto'}}>{error}</div>;
 
     const roleLabel = user.role === 'ngo' ? 'Host Organizer' : 'Volunteer';
 
@@ -83,7 +95,7 @@ const ProfileSettings = () => {
                     boxShadow: '0 10px 30px var(--color-shadow)'
                 }}>
                     
-                    {/* Role / Email Status */}
+                    {/* Role / Email Status (Email field is read-only) */}
                     <div style={{borderBottom: '1px solid #eee', paddingBottom: '20px', marginBottom: '20px'}}>
                         <p style={{fontWeight: 600}}>Role: <span style={{color: 'var(--color-secondary)'}}>{roleLabel}</span></p>
                         <p style={{fontSize: '14px', color: 'var(--color-text-light)'}}>Email: {formData.email} (Cannot be changed)</p>
@@ -92,14 +104,28 @@ const ProfileSettings = () => {
                     {/* Full Name */}
                     <div style={{marginBottom: '20px'}}>
                         <label style={{display: 'block', marginBottom: '5px', fontWeight: 600}}>Full Name</label>
-                        <input type="text" style={{width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '6px'}} name="name" value={formData.name} onChange={onChange} required />
+                        <input 
+                            type="text" 
+                            style={{width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: 'var(--color-input-bg)'}} 
+                            name="name" 
+                            value={formData.name} 
+                            onChange={onChange} 
+                            required 
+                        />
                     </div>
 
                     {/* NGO Name (Only for NGO role) */}
                     {user.role === 'ngo' && (
                         <div style={{marginBottom: '30px'}}>
                             <label style={{display: 'block', marginBottom: '5px', fontWeight: 600}}>Organization Name</label>
-                            <input type="text" style={{width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '6px'}} name="ngoName" value={formData.ngoName} onChange={onChange} required />
+                            <input 
+                                type="text" 
+                                style={{width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: 'var(--color-input-bg)'}} 
+                                name="ngoName" 
+                                value={formData.ngoName} 
+                                onChange={onChange} 
+                                required 
+                            />
                         </div>
                     )}
                     

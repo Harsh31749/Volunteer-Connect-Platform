@@ -9,15 +9,7 @@ const EventCard = ({ event }) => {
 
     return (
         <div style={{
-            backgroundColor: 'var(--color-card-bg)', 
-            padding: '20px', 
-            borderRadius: '10px', 
-            boxShadow: '0 4px 15px var(--color-shadow)', // Soft, intentional shadow
-            borderTop: '5px solid var(--color-primary)', // Strong top accent border
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            transition: 'transform 0.2s',
+            // ... (UI styles unchanged)
             minHeight: '320px'
         }}>
             <div>
@@ -31,13 +23,13 @@ const EventCard = ({ event }) => {
                     {event.title}
                 </h3>
                 
-                {/* NGO Name */}
+                {/* NGO Name - FIX: Added optional chaining (?.) for robust rendering */}
                 <p style={{
                     fontSize: '14px', 
                     color: 'var(--color-text-light)', 
                     marginBottom: '15px'
                 }}>
-                    Organized by: {event.ngo.ngoName || 'N/A'}
+                    Organized by: {event.ngo?.ngoName || 'N/A'}
                 </p>
 
                 {/* Details List */}

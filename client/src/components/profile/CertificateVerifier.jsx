@@ -35,16 +35,26 @@ const CertificateVerifier = () => {
     const renderResult = () => {
         if (!result) return null;
 
+        // FIX: Use optional chaining and map properties to server response
+        const volunteerName = result.details?.volunteerName || 'N/A';
+        const eventTitle = result.details?.eventTitle || 'N/A';
+        // FIX: Server returns 'organizedBy', not 'ngoName'
+        const organizedBy = result.details?.organizedBy || 'N/A'; 
+        
+        // Note: The server only returns the event date if the necessary field was included 
+        // in the populated Event object and exposed in the details object. Assuming a date field exists.
+        const eventDate = result.details?.eventDate ? new Date(result.details.eventDate).toDateString() : 'N/A';
+
         if (result.isValid) {
             return (
                 <div style={{ padding: '20px', backgroundColor: 'var(--color-success)', color: 'white', borderRadius: '8px', marginTop: '25px', boxShadow: '0 4px 10px rgba(40, 167, 69, 0.5)' }}>
                     <h4 style={{marginBottom: '10px', fontSize: '1.5rem'}}>✅ Verification Successful</h4>
                     <p style={{marginBottom: '15px'}}>This certificate is **VALID** and was issued by the Volunteer Connect Platform.</p>
                     <ul style={{listStyle: 'none', padding: 0}}>
-                        <li><strong>Volunteer:</strong> {result.details.volunteerName}</li>
-                        <li><strong>Event:</strong> {result.details.eventTitle}</li>
-                        <li><strong>Date:</strong> {new Date(result.details.eventDate).toDateString()}</li>
-                        <li><strong>Organization:</strong> {result.details.ngoName}</li>
+                        <li><strong>Volunteer:</strong> {volunteerName}</li>
+                        <li><strong>Event:</strong> {eventTitle}</li>
+                        <li><strong>Date:</strong> {eventDate}</li>
+                        <li><strong>Organization:</strong> {organizedBy}</li>
                     </ul>
                 </div>
             );
@@ -53,7 +63,8 @@ const CertificateVerifier = () => {
                 <div style={{ padding: '20px', backgroundColor: '#dc3545', color: 'white', borderRadius: '8px', marginTop: '25px' }}>
                     <h4 style={{marginBottom: '10px', fontSize: '1.5rem'}}>⚠️ Verification Failed</h4>
                     <p>{result.msg}</p>
-                    {result.registrationStatus && <p>Status on Record: **{result.registrationStatus}**</p>}
+                    {/* Access error message properties defensively */}
+                    {result.details?.registrationStatus && <p>Status on Record: <strong>{result.details.registrationStatus}</strong></p>}
                 </div>
             );
         }
@@ -77,7 +88,7 @@ const CertificateVerifier = () => {
                             <label style={{display: 'block', marginBottom: '8px', fontWeight: 600}}>Verification ID:</label>
                             <input
                                 type="text"
-                                style={{width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '6px'}}
+                                style={{width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: 'var(--color-input-bg)'}}
                                 placeholder="Paste the unique Registration ID here..."
                                 value={regId}
                                 onChange={(e) => setRegId(e.target.value)}

@@ -31,6 +31,9 @@ const sendCertificate = (volunteer, event, ngoOrganizer, registrationId) => {
 
         // Trigger the PDF creation which emits 'data' and 'end' events
         emailService.generateCertificatePDF(doc, volunteer, event, ngoOrganizer.ngoName, registrationId);
+        
+        // CRITICAL FIX: Must explicitly end the document stream to trigger the 'end' event.
+        doc.end(); 
     });
 };
 
@@ -65,15 +68,16 @@ router.put('/:regId/verify', auth, async (req, res) => {
         if (!registration || !registration.event) return res.status(404).json({ msg: 'Registration or event not found.' });
         const event = registration.event;
 
-        // Authorization check
+        // Authorization check: Ensure the event belongs to this NGO
         if (event.ngo.toString() !== req.user.id) return res.status(403).json({ msg: 'Unauthorized: NGO does not own this event.' });
 
         const volunteer = await User.findById(registration.volunteer);
         const ngoOrganizer = await User.findById(req.user.id);
         
-        // Robustness Check: Ensure both users exist (Fix 3)
+        // Robustness Check: Ensure both users exist
         if (!volunteer || !ngoOrganizer) return res.status(404).json({ msg: 'Associated user record (volunteer or NGO) not found.' });
 
+        // Logic Refinement: Only award points and send certificate if status changes
         if (registration.status !== 'Attended') {
             const pointsToAdd = 5; 
             volunteer.volunteerPoints = (volunteer.volunteerPoints || 0) + pointsToAdd;
@@ -81,15 +85,22 @@ router.put('/:regId/verify', auth, async (req, res) => {
             
             registration.status = 'Attended';
             await registration.save();
+            
+            await sendCertificate(volunteer, event, ngoOrganizer, registration._id);
+
+            res.json({ 
+                msg: 'Attendance verified, volunteer points updated, and certificate sent.', 
+                registration,
+                updatedPoints: volunteer.volunteerPoints
+            });
+        } else {
+             res.json({ 
+                msg: 'Attendance already verified.', 
+                registration,
+                updatedPoints: volunteer.volunteerPoints
+            });
         }
 
-        await sendCertificate(volunteer, event, ngoOrganizer, registration._id);
-
-        res.json({ 
-            msg: 'Attendance verified, volunteer points updated, and certificate sent.', 
-            registration,
-            updatedPoints: volunteer.volunteerPoints
-        });
 
     } catch (err) { 
         console.error('Certificate verification error:', err.message);

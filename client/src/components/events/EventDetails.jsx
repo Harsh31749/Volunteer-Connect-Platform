@@ -8,13 +8,14 @@ const EventDetails = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const { id } = useParams();
+    // user contains {id, email, role, ...} after our AuthContext fixes
     const { user } = useAuth();
     const navigate = useNavigate();
 
     useEffect(() => {
         const fetchEvent = async () => {
             try {
-                // Fetch event details
+                // Fetch event details (including populated NGO data)
                 const res = await axios.get(`/api/events/${id}`);
                 setEvent(res.data);
             } catch (err) {
@@ -40,6 +41,7 @@ const EventDetails = () => {
             // API call to the POST /api/registrations/:eventId route
             const res = await axios.post(`/api/registrations/${id}`);
             alert(res.data.msg || 'Registration successful!');
+            // Redirect to volunteer dashboard after successful registration
             navigate('/dashboard/volunteer'); 
 
         } catch (err) {
@@ -48,18 +50,16 @@ const EventDetails = () => {
         }
     };
 
-    if (loading) return <h1 style={{textAlign: 'center', fontSize: '20px', marginTop: '50px', color: 'var(--color-text-light)'}}>Loading event details...</h1>;
-    if (error) return <div style={{padding: '15px', backgroundColor: '#dc3545', color: 'white', borderRadius: '5px', maxWidth: '600px', margin: '50px auto'}}>{error}</div>;
-    if (!event) return <h1 style={{textAlign: 'center', fontSize: '20px', marginTop: '50px', color: 'var(--color-text-light)'}}>Event data is missing.</h1>;
-
     const getRegistrationButton = () => {
         if (!user) {
+            // The button action is handled by the initial check in handleRegistration
             return <button className="btn-vibrant" style={{background: 'var(--color-primary)'}} onClick={handleRegistration}>Login to Register</button>;
         }
         if (user.role !== 'volunteer') {
             return <p style={{color: 'var(--color-text-light)'}}>Only Volunteers can register for events.</p>;
         }
 
+        // Volunteer is logged in and eligible
         return (
             <button 
                 className="btn-vibrant"
@@ -71,7 +71,12 @@ const EventDetails = () => {
         );
     };
 
-    const ngoName = event.ngo.ngoName || 'N/A';
+    if (loading) return <h1 style={{textAlign: 'center', fontSize: '20px', marginTop: '50px', color: 'var(--color-text-light)'}}>Loading event details...</h1>;
+    if (error) return <div style={{padding: '15px', backgroundColor: '#dc3545', color: 'white', borderRadius: '5px', maxWidth: '600px', margin: '50px auto'}}>{error}</div>;
+    if (!event) return <h1 style={{textAlign: 'center', fontSize: '20px', marginTop: '50px', color: 'var(--color-text-light)'}}>Event data is missing.</h1>;
+
+    // FIX: Use optional chaining (?.) for safely accessing populated NGO data
+    const ngoName = event.ngo?.ngoName || 'N/A';
     const eventDate = new Date(event.date).toDateString();
 
     return (

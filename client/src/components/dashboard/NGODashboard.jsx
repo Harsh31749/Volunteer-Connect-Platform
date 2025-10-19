@@ -21,6 +21,7 @@ const NGODashboard = () => {
     const fetchNgoEvents = async () => {
         setLoading(true);
         try {
+            // This endpoint enforces that only the logged-in NGO's events are returned
             const res = await axios.get('/api/ngo/events');
             setEvents(res.data);
         } catch (err) {
@@ -44,6 +45,7 @@ const NGODashboard = () => {
                 eventId={selectedEventId} 
                 onBack={() => { 
                     setSelectedEventId(null); 
+                    // Refetches events automatically because currentView changes
                     setCurrentView('list'); 
                 }} 
             />
@@ -58,7 +60,8 @@ const NGODashboard = () => {
                     Host Panel
                 </h1>
                 <p style={{ color: 'var(--color-text-light)', fontSize: '1.2rem', marginBottom: '1.5rem' }}>
-                    Welcome, {user.ngoName || 'Organizer'}! Manage your listings and volunteers.
+                    {/* FIX: Used optional chaining (?.) for robust access to user.ngoName */}
+                    Welcome, {user?.ngoName || 'Organizer'}! Manage your listings and volunteers.
                 </p>
 
                 <button 
