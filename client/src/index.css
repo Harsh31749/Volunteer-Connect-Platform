@@ -1,0 +1,64 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap');
+
+:root {
+    --color-primary: #007bff;
+    --color-secondary: #FF6B00;
+    --color-text: #1a1a1a;
+    --color-text-light: #555;
+    --color-background: #f4f7f9;
+    --color-card-bg: #ffffff;
+    --color-shadow: rgba(0, 0, 0, 0.1);
+    --color-success: #28a745;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    min-height: 100%;
+    height: auto;
+    overflow-x: hidden;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--color-background);
+    color: var(--color-text);
+    line-height: 1.6;
+}
+
+a {
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.btn-vibrant {
+    background: linear-gradient(90deg, var(--color-secondary), #ff9900);
+    color: white;
+    font-weight: 700;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(255, 107, 0, 0.4);
+}
+
+.btn-vibrant:hover {
+    background: linear-gradient(90deg, #ff9900, var(--color-secondary));
+    box-shadow: 0 6px 15px rgba(255, 107, 0, 0.6);
+    transform: translateY(-2px);
+}
+
+.container-fluid {
+    width: 100%;
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-right: auto;
+    margin-left: auto;
+    max-width: 1200px;
+}
