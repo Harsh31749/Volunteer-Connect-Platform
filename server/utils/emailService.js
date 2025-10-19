@@ -3,12 +3,12 @@ const PDFDocument = require('pdfkit');
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
-    auth: { user: 'YOUR_EMAIL@gmail.com', pass: 'YOUR_APP_PASSWORD' }
+    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
 });
 
 exports.sendCertificateEmail = async (volunteer, event, certificateBuffer) => {
     const mailOptions = {
-        from: 'Volunteer Connect Platform <YOUR_EMAIL@gmail.com>',
+        from: `Volunteer Connect Platform <${process.env.EMAIL_USER}>`, 
         to: volunteer.email,
         subject: `Certificate of Attendance: ${event.title}`,
         html: `<p>Dear ${volunteer.name}, find your attached digital certificate.</p>`,
@@ -21,7 +21,9 @@ exports.sendCertificateEmail = async (volunteer, event, certificateBuffer) => {
     try {
         await transporter.sendMail(mailOptions);
     } catch (error) {
-        console.error(`Error sending email to ${volunteer.email}:`, error);
+        console.error(`Error sending certificate email to ${volunteer.email}:`, error);
+        // MODIFIED: Re-throw the error so calling functions know it failed.
+        throw new Error(`Failed to send certificate email to ${volunteer.email}.`);
     }
 };
 
