@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -122,19 +121,3 @@ const Login = () => {
 };
 
 export default Login;
-=======
-import React from 'react';
-import GoogleAuth from './GoogleAuth';
-
-const Login = () => {
-  return (
-    <div>
-      <h2>Login</h2>
-      {/* Other login form or buttons */}
-      <GoogleAuth />
-    </div>
-  );
-};
-
-export default Login;
->>>>>>> ad8ffeaf422495bbebab381455c6cd8ece9dc28e
