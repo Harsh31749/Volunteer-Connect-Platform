@@ -1,3 +1,15 @@
+/* --- Global Variables (Define custom properties for colors and styling) --- */
+:root {
+    --color-primary: #007bff; /* Example Primary Blue */
+    --color-secondary: #ff6347; /* Example Secondary Red/Orange */
+    --color-text: #333; /* Dark text */
+    --color-text-light: #666; /* Lighter text for descriptions */
+    --color-background: #f4f7f6; /* Light gray background */
+    --color-card-bg: #ffffff; /* White background for cards/nav */
+    --color-shadow: rgba(0, 0, 0, 0.1); /* Light shadow */
+}
+
+/* Base styles from original App.css */
 .App {
   text-align: center;
 }
@@ -35,4 +47,164 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/* --- Layout Utility --- */
+/* Fix: This class applies the necessary padding to clear the fixed NavBar (60px height) */
+.fixed-navbar-offset {
+    padding-top: 60px;
+}
+
+/* --- NavBar Styles (Moved from NavBar.js inline styles) --- */
+.navbar-container {
+    background-color: var(--color-card-bg);
+    box-shadow: 0 2px 10px var(--color-shadow);
+    height: 60px;
+    display: flex;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 100;
+}
+
+.navbar-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.brand-link {
+    color: var(--color-primary);
+    font-size: 20px;
+    font-weight: 700;
+    text-decoration: none; 
+}
+
+.brand-icon {
+    margin-right: 8px;
+}
+
+.nav-links-group {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Replaces inline gap */
+}
+
+.nav-link {
+    padding: 0 15px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text);
+    text-decoration: none;
+}
+
+/* --- Button Styles (Moved from NavBar.js inline styles) --- */
+.btn-base {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 600;
+    transition: background-color 0.2s;
+    cursor: pointer;
+    text-decoration: none; 
+    border: none; 
+}
+
+.btn-primary-outline {
+    border: 1px solid var(--color-primary);
+    color: var(--color-primary);
+    background-color: transparent;
+}
+
+.btn-secondary {
+    background-color: var(--color-secondary);
+    color: white;
+}
+
+.btn-light-neutral {
+    background-color: #f0f0f0; 
+    color: var(--color-text);
+    border: 1px solid #f0f0f0;
+}
+
+.btn-vibrant { /* The Login button in Login.js */
+    background-color: var(--color-primary);
+    color: white;
+    border: 1px solid var(--color-primary);
+}
+
+/* --- Login Page Styles (Moved from Login.js inline styles) --- */
+.login-page {
+    background: var(--color-background);
+    min-height: 100vh;
+    padding-top: 5rem;
+    display: flex;
+    justify-content: center;
+}
+
+.login-header-group {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.login-header-group h1 {
+    color: var(--color-primary);
+    font-size: 2.5rem;
+    font-weight: 800;
+}
+
+.login-header-group p {
+    color: var(--color-text-light);
+}
+
+.login-card {
+    background-color: var(--color-card-bg);
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px var(--color-shadow);
+    width: 100%; 
+}
+
+.separator-line {
+    border-bottom: 1px solid #ddd;
+    line-height: 0.1em;
+    margin: 30px 0;
+    text-align: center;
+}
+
+.separator-text {
+    background: var(--color-card-bg);
+    padding: 0 10px;
+    color: #888;
+    font-weight: 600;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-field {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-sizing: border-box; 
+}
+
+.password-group {
+    margin-bottom: 30px;
+}
+
+.error-message {
+    color: white;
+    background-color: #dc3545; 
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.need-account-text {
+    text-align: center;
+    margin-top: 20px;
+    color: var(--color-text-light);
 }

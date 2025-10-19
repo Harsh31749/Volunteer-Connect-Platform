@@ -36,13 +36,15 @@ const Register = () => {
             
             const loggedInUser = await register(userData);
 
+            // Redirect user to their appropriate dashboard after successful registration
             if (loggedInUser.role === 'ngo') {
                 navigate('/dashboard/ngo');
             } else {
                 navigate('/dashboard/volunteer');
             }
         } catch (err) {
-            setError(err.response?.data?.msg || 'Registration failed.');
+            // MODIFIED: Use the simple error message provided by AuthContext
+            setError(err.message || 'Registration failed.'); 
         }
     };
 
@@ -69,7 +71,7 @@ const Register = () => {
                 }}>
                     
                     {/* 1. GOOGLE SIGN-IN OPTION */}
-                    <GoogleAuth />
+                    <GoogleAuth /> {/* The GoogleAuth component handles its own button style and text */}
                     
                     {/* OR Separator */}
                     <div style={{ 

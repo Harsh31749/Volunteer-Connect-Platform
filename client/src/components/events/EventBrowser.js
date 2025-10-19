@@ -25,7 +25,11 @@ const EventBrowser = () => {
                 const res = await axios.get(`/api/events?${query}`); 
                 setEvents(res.data);
             } catch (err) {
-                setError('Failed to fetch events.');
+                // FIX: Added console log to inspect the failure more closely
+                console.error('Event Fetch Error Details:', err);
+                // Check if we got a specific message from the server
+                const errMsg = err.response?.data?.msg || 'Failed to fetch events.';
+                setError(errMsg);
             } finally {
                 setLoading(false);
             }
@@ -52,7 +56,7 @@ const EventBrowser = () => {
             <div className="container-fluid" style={{ padding: '80px 0' }}>
                 {/* HERO TEXT */}
                 <h1 style={{color: 'white', fontSize: '3.5rem', fontWeight: 'bold', textAlign: 'center', textShadow: '0 2px 4px rgba(0,0,0,0.5)'}}>
-                    Volunteer. Impact. Connect. 🤝
+                    Volunteer. Impact. Connect.
                 </h1>
                 <p style={{color: '#fff', fontSize: '1.2rem', opacity: 0.9, textAlign: 'center', marginBottom: '3rem'}}>
                     Your next mission is waiting. Browse verified NGO opportunities globally.
