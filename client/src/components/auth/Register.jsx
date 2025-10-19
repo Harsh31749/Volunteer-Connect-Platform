@@ -24,8 +24,9 @@ const Register = () => {
         e.preventDefault();
         setError(''); 
 
+        // Client-side validation check
         if (role === 'ngo' && !ngoName) {
-            return setError('Organization Name is required for organizers.');
+            return setError('Organization Name is required for NGO accounts.');
         }
 
         try {
@@ -34,6 +35,7 @@ const Register = () => {
                 userData.ngoName = ngoName;
             }
             
+            // The register function in AuthContext now returns the user object
             const loggedInUser = await register(userData);
 
             // Redirect user to their appropriate dashboard after successful registration
@@ -43,7 +45,7 @@ const Register = () => {
                 navigate('/dashboard/volunteer');
             }
         } catch (err) {
-            // MODIFIED: Use the simple error message provided by AuthContext
+            // Use the detailed error message propagated from AuthContext (and backend)
             setError(err.message || 'Registration failed.'); 
         }
     };
@@ -53,7 +55,6 @@ const Register = () => {
             background: 'var(--color-background)', 
             minHeight: '100vh', 
             paddingTop: '5rem',
-            // Fix: Center the page content
             display: 'flex', 
             justifyContent: 'center', 
         }}>
@@ -71,7 +72,7 @@ const Register = () => {
                 }}>
                     
                     {/* 1. GOOGLE SIGN-IN OPTION */}
-                    <GoogleAuth /> {/* The GoogleAuth component handles its own button style and text */}
+                    <GoogleAuth />
                     
                     {/* OR Separator */}
                     <div style={{ 
@@ -90,7 +91,7 @@ const Register = () => {
                         {/* Role Selection */}
                         <div style={{marginBottom: '15px'}}>
                             <label style={{display: 'block', marginBottom: '5px', color: 'var(--color-text-light)'}}>Account Type:</label>
-                            <select name="role" value={role} onChange={onChange} style={{width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '6px'}}>
+                            <select name="role" value={role} onChange={onChange} style={{width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: 'var(--color-input-bg)'}}>
                                 <option value="volunteer">Volunteer</option>
                                 <option value="ngo">NGO Organizer</option>
                             </select>
@@ -98,23 +99,23 @@ const Register = () => {
                         
                         {/* Full Name */}
                         <div style={{marginBottom: '15px'}}>
-                            <input type="text" placeholder="Full Name" name="name" value={name} onChange={onChange} required style={{width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '6px'}} />
+                            <input type="text" placeholder="Full Name" name="name" value={name} onChange={onChange} required style={{width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: 'var(--color-input-bg)'}} />
                         </div>
                         
                         {/* Email */}
                         <div style={{marginBottom: '15px'}}>
-                            <input type="email" placeholder="Email Address" name="email" value={email} onChange={onChange} required style={{width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '6px'}} />
+                            <input type="email" placeholder="Email Address" name="email" value={email} onChange={onChange} required style={{width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: 'var(--color-input-bg)'}} />
                         </div>
                         
                         {/* Password */}
                         <div style={{marginBottom: '15px'}}>
-                            <input type="password" placeholder="Password (min 6 chars)" name="password" value={password} onChange={onChange} minLength="6" required style={{width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '6px'}} />
+                            <input type="password" placeholder="Password (min 6 chars)" name="password" value={password} onChange={onChange} minLength="6" required style={{width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: 'var(--color-input-bg)'}} />
                         </div>
 
                         {/* Conditional NGO Name Field */}
                         {role === 'ngo' && (
                             <div style={{marginBottom: '25px'}}>
-                                <input type="text" placeholder="Organization Name" name="ngoName" value={ngoName} onChange={onChange} required style={{width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '6px'}} />
+                                <input type="text" placeholder="Organization Name" name="ngoName" value={ngoName} onChange={onChange} required style={{width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: 'var(--color-input-bg)'}} />
                             </div>
                         )}
                         

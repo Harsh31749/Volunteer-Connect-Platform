@@ -6,6 +6,7 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('./models/User');
 const jwt = require('jsonwebtoken');
+const userRoutes = require('./routes/userRoutes');
 
 
 require('dotenv').config();
@@ -14,10 +15,7 @@ const app = express();
 
 const connectDB = async () => {
     try {
-        await mongoose.connect(process.env.MONGO_URI, {
-             useNewUrlParser: true,
-             useUnifiedTopology: true
-        });
+        await mongoose.connect(process.env.MONGO_URI); // Removed deprecated options
         console.log('MongoDB Connected Successfully!');
     } catch (err) {
         console.error(`MongoDB Connection Error: ${err.message}`);
@@ -25,6 +23,7 @@ const connectDB = async () => {
     }
 };
 connectDB();
+
 app.use(session({
   secret: process.env.SESSION_SECRET, 
   resave: false,
@@ -95,12 +94,12 @@ app.get('/auth/google/callback',
   (req, res) => {
     const user = req.user;
     const token = jwt.sign(
-      { id: user._id, email: user.email },
+      { id: user._id, email: user.email, role: user.role }, // <-- FIX IS HERE
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
 
-    console.log('Generated token:', token);  // <-- Add this to confirm token creation
+    console.log('Generated token:', token); 
 
     res.redirect(`http://localhost:3000/social-login-success?token=${token}`);
   }

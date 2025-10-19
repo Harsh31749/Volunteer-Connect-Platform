@@ -5,6 +5,7 @@ const auth = require('../middleware/auth');
 const Event = require('../models/Event');
 const User = require('../models/User');
 
+// Middleware to restrict access to authenticated volunteers
 router.use(auth, (req, res, next) => {
     if (req.user.role !== 'volunteer') {
         return res.status(403).json({ msg: 'Access denied. Volunteer role required.' });
@@ -16,7 +17,7 @@ router.use(auth, (req, res, next) => {
 router.get('/dashboard/upcoming', async (req, res) => {
     try {
         const tomorrow = new Date();
-        // The original code filtered for events starting from 'tomorrow', which is good.
+        // Sets date to tomorrow to strictly filter for future events
         tomorrow.setDate(tomorrow.getDate() + 1); 
 
         const registrations = await Registration.find({ volunteer: req.user.id, status: { $in: ['Pending', 'Confirmed'] } })
@@ -36,10 +37,20 @@ router.get('/dashboard/upcoming', async (req, res) => {
 // GET /api/volunteers/dashboard/history - Events user has attended
 router.get('/dashboard/history', async (req, res) => {
     try {
-        const history = await Registration.find({ volunteer: req.user.id, status: 'Attended' })
-        .populate('event', 'title location date category')
-        .sort({ 'event.date': -1 }); 
+        let history = await Registration.find({ volunteer: req.user.id, status: 'Attended' })
+        .populate('event', 'title location date category');
+        // Removed original, unreliable `.sort()` method.
         
+        // Filter out registrations whose events were deleted
+        history = history.filter(reg => reg.event !== null);
+
+        // FIX: Robust in-memory sort (descending date - most recent first)
+        history.sort((a, b) => {
+            const dateA = a.event.date.getTime();
+            const dateB = b.event.date.getTime();
+            return dateB - dateA;
+        });
+
         res.json(history);
 
     } catch (err) { 

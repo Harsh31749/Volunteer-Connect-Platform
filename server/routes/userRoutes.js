@@ -1,68 +1,48 @@
 const express = require('express');
-const passport = require('passport');
 const router = express.Router();
 const User = require('../models/User');
 const jwt = require('jsonwebtoken'); 
-const { OAuth2Client } = require('google-auth-library'); // For verifying client-side ID tokens
+const { OAuth2Client } = require('google-auth-library');
+const auth = require('../middleware/auth'); 
+
+const generateToken = (user) => {
+    return jwt.sign(
+        { id: user.id, email: user.email, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: '5 days' }
+    );
+};
+
 
 // ----------------------------------------------------------------
-// NEW ROUTE: POST /api/users/google-login (Client-side Google Login)
+// POST /api/users/google-login (Client-side ID Token verification)
 // ----------------------------------------------------------------
 router.post('/google-login', async (req, res) => {
     const { token: idToken } = req.body;
-    
-    // Use the client ID from environment variable
     const CLIENT_ID = process.env.GOOGLE_CLIENT_ID; 
     const client = new OAuth2Client(CLIENT_ID);
     
     try {
-        if (!idToken) {
-            return res.status(400).json({ msg: 'Google ID Token is missing.' });
-        }
+        if (!idToken) return res.status(400).json({ msg: 'Google ID Token is missing.' });
 
-        // 1. Verify the Google ID Token
         const ticket = await client.verifyIdToken({
             idToken,
-            audience: CLIENT_ID, // Audience must match your client ID for security
+            audience: CLIENT_ID,
         });
         const payload = ticket.getPayload();
         const { email, name } = payload;
         
-        // 2. Find or Create user
         let user = await User.findOne({ email });
-
         if (!user) {
-            // New user registration defaults to 'volunteer' role
             user = new User({ name, email, role: 'volunteer' });
-            // Since this is Google Auth, we won't have a password for the local strategy
             await user.save(); 
         }
 
-        // 3. Generate application JWT
-        const appPayload = {
-            user: {
-                id: user.id,
-                role: user.role
-            }
-        };
-
-        jwt.sign(
-            appPayload,
-            process.env.JWT_SECRET,
-            { expiresIn: '5 days' },
-            (err, token) => {
-                if (err) throw err;
-                // 4. Return application JWT and user data to client
-                res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
-            }
-        );
+        const token = generateToken(user);
+        res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, ngoName: user.ngoName } });
 
     } catch (err) {
         console.error('Google Login processing error:', err.message);
-        // Provide a clearer error message for the client
-        if (err.message.includes('Token used too early') || err.message.includes('Token used too late') || err.message.includes('Invalid token signature')) {
-             return res.status(401).json({ msg: 'Social Login Failed: Invalid or expired Google token.' });
-        }
         res.status(500).json({ msg: 'Server Error during Google login processing.', error: err.message });
     }
 });
@@ -72,102 +52,118 @@ router.post('/google-login', async (req, res) => {
 // POST /api/users/register (Local User Registration)
 // ----------------------------------------------------------------
 router.post('/register', async (req, res) => {
-    const { name, email, password, role, ngoName } = req.body;
+    const { name, email, password, role, ngoName } = req.body;
 
-    try {
-        // Input validation (basic check for required fields)
-        if (!name || !email || !password) {
-            return res.status(400).json({ msg: 'Please enter all required fields: name, email, and password.' });
-        }
+    try {
+        if (!name || !email || !password) return res.status(400).json({ msg: 'Please enter all required fields: name, email, and password.' });
 
-        // Check if user already exists
-        let user = await User.findOne({ email });
-        if (user) {
-            return res.status(400).json({ msg: 'User already exists' });
-        }
-        
-        // Create New User Document (Passing RAW password for middleware to hash)
-        user = new User({
-            name,
-            email,
-            password, 
-            role: role || 'volunteer',
-            ...(role === 'ngo' && { ngoName }) 
-        });
+        let user = await User.findOne({ email });
+        if (user) return res.status(400).json({ msg: 'User already exists' });
+        
+        user = new User({
+            name, email, password, 
+            role: role || 'volunteer',
+            ...(role === 'ngo' && { ngoName }) 
+        });
+        await user.save();
 
-        // Hashing occurs automatically via pre('save') middleware
-        await user.save();
+        const token = generateToken(user);
+        res.status(201).json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, ngoName: user.ngoName } });
 
-        // Generate JWT Token for immediate login
-        const payload = {
-            user: {
-                id: user.id,
-                role: user.role
-            }
-        };
-
-        jwt.sign(
-            payload,
-            process.env.JWT_SECRET,
-            { expiresIn: '5 days' },
-            (err, token) => {
-                if (err) throw err;
-                res.status(201).json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
-            }
-        );
-
-    } catch (err) {
-        console.error('Registration error:', err.message);
-        res.status(500).json({ msg: 'Server Error during registration.', error: err.message });
-    }
+    } catch (err) {
+        console.error('Registration error:', err.message);
+        res.status(500).json({ msg: 'Server Error during registration.', error: err.message });
+    }
 });
 
 // ----------------------------------------------------------------
-// NEW ROUTE: POST /api/users/login (Local User Login)
+// POST /api/users/login (Local User Login)
 // ----------------------------------------------------------------
 router.post('/login', async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password } = req.body;
 
-    try {
-        // 1. Check for missing credentials
-        if (!email || !password) {
-            return res.status(400).json({ msg: 'Please enter all fields: email and password.' });
-        }
+    try {
+        if (!email || !password) {
+            return res.status(400).json({ msg: 'Please enter all fields: email and password.' });
+        }
 
-        // 2. Find user by email
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(400).json({ msg: 'Invalid Credentials' });
-        }
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(400).json({ msg: 'Invalid Credentials' });
+        }
 
-        // 3. Compare password hash using the helper method from the User model
-        const isMatch = await user.matchPassword(password);
-        if (!isMatch) {
-            return res.status(400).json({ msg: 'Invalid Credentials' });
-        }
+        const isMatch = await user.matchPassword(password);
+        if (!isMatch) {
+            return res.status(400).json({ msg: 'Invalid Credentials' });
+        }
 
-        // 4. Generate and return JWT token upon success
-        const payload = {
-            user: {
-                id: user.id,
-                role: user.role
-            }
-        };
+        const token = generateToken(user);
+        res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, ngoName: user.ngoName } });
 
-        jwt.sign(
-            payload,
-            process.env.JWT_SECRET,
-            { expiresIn: '5 days' },
-            (err, token) => {
-                if (err) throw err;
-                res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
-            }
-        );
+    } catch (err) {
+        console.error('Login error:', err.message);
+        res.status(500).json({ msg: 'Server Error during login.', error: err.message });
+    }
+});
 
-    } catch (err) {
-        console.error('Login error:', err.message);
-        res.status(500).json({ msg: 'Server Error during login.', error: err.message });
-    }
+// ----------------------------------------------------------------
+// GET /api/users/profile (Fetch current user's full profile)
+// ----------------------------------------------------------------
+// This route is necessary for the client's AuthContext to rehydrate the full user object
+router.get('/profile', auth, async (req, res) => { 
+    try {
+        // req.user contains {id, email} from the token payload
+        const user = await User.findById(req.user.id).select('-password'); 
+
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+        
+        res.json(user);
+    } catch (err) {
+        console.error('Profile fetch error:', err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+
+// ----------------------------------------------------------------
+// PUT /api/users/profile (Update Name and/or NGO Name)
+// ----------------------------------------------------------------
+router.put('/profile', auth, async (req, res) => {
+    const { name, ngoName } = req.body;
+    const updateFields = {};
+
+    if (name) updateFields.name = name;
+
+    if (req.user.role === 'ngo') {
+        if (!ngoName) return res.status(400).json({ msg: 'Organization Name is required for NGO accounts.' });
+        updateFields.ngoName = ngoName;
+    }
+
+    try {
+        if (Object.keys(updateFields).length === 0) {
+            return res.status(400).json({ msg: 'No valid fields provided for update.' });
+        }
+
+        const user = await User.findByIdAndUpdate(
+            req.user.id,
+            { $set: updateFields },
+            { new: true, runValidators: true, select: '-password' }
+        );
+
+        if (!user) return res.status(404).json({ msg: 'User not found.' });
+        
+        res.json({ 
+            name: user.name, 
+            email: user.email, 
+            ngoName: user.ngoName,
+            role: user.role,
+            msg: 'Profile updated successfully.' 
+        });
+    } catch (err) {
+        console.error('Profile update error:', err.message);
+        if (err.name === 'ValidationError') return res.status(400).json({ msg: err.message });
+        res.status(500).json({ msg: 'Server Error during profile update.' });
+    }
 });
 
 
