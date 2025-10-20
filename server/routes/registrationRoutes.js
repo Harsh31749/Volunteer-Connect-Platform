@@ -7,37 +7,29 @@ const auth = require('../middleware/auth');
 const PDFDocument = require('pdfkit');
 const emailService = require('../utils/emailService');
 
-// HELPER FUNCTION: Wraps PDF generation and email sending in an awaitable Promise
-const sendCertificate = (volunteer, event, ngoOrganizer, registrationId) => {
+const sendCertificate = (volunteer, event, ngoOrganizer, registrationId, ngoName) => {
     return new Promise(async (resolve, reject) => {
-        const doc = new PDFDocument();
+        const doc = new PDFDocument({ size: 'A5', layout: 'landscape' }); 
         const buffers = [];
 
-        // When PDF generation creates data chunks, push them to the buffers array
         doc.on('data', buffers.push.bind(buffers));
 
-        // When PDF generation finishes, proceed to email and resolve/reject
         doc.on('end', async () => {
             try {
                 const certificateBuffer = Buffer.concat(buffers);
-                // Await the potentially error-throwing email service here
-                await emailService.sendCertificateEmail(volunteer, event, certificateBuffer);
+                await emailService.sendCertificateEmail(volunteer, event, certificateBuffer, ngoName); 
                 resolve();
             } catch (err) {
-                // Reject the promise if the email fails, propagating the error to the main route handler
                 reject(err);
             }
         });
 
-        // Trigger the PDF creation which emits 'data' and 'end' events
         emailService.generateCertificatePDF(doc, volunteer, event, ngoOrganizer.ngoName, registrationId);
         
-        // CRITICAL FIX: Must explicitly end the document stream to trigger the 'end' event.
         doc.end(); 
     });
 };
 
-// POST /api/registrations/:eventId (Volunteer Signup)
 router.post('/:eventId', auth, async (req, res) => {
     if (req.user.role !== 'volunteer') return res.status(403).json({ msg: 'Access denied.' });
     try {
@@ -57,27 +49,22 @@ router.post('/:eventId', auth, async (req, res) => {
     }
 });
 
-// PUT /api/registrations/:regId/verify (NGO Verification + Certificate Trigger)
 router.put('/:regId/verify', auth, async (req, res) => {
     if (req.user.role !== 'ngo') return res.status(403).json({ msg: 'Authorization required.' });
 
     try {
         const registration = await Registration.findById(req.params.regId).populate('event');
 
-        // Robustness checks for missing registration or event
         if (!registration || !registration.event) return res.status(404).json({ msg: 'Registration or event not found.' });
         const event = registration.event;
 
-        // Authorization check: Ensure the event belongs to this NGO
         if (event.ngo.toString() !== req.user.id) return res.status(403).json({ msg: 'Unauthorized: NGO does not own this event.' });
 
         const volunteer = await User.findById(registration.volunteer);
         const ngoOrganizer = await User.findById(req.user.id);
         
-        // Robustness Check: Ensure both users exist
         if (!volunteer || !ngoOrganizer) return res.status(404).json({ msg: 'Associated user record (volunteer or NGO) not found.' });
 
-        // Logic Refinement: Only award points and send certificate if status changes
         if (registration.status !== 'Attended') {
             const pointsToAdd = 5; 
             volunteer.volunteerPoints = (volunteer.volunteerPoints || 0) + pointsToAdd;
@@ -86,7 +73,7 @@ router.put('/:regId/verify', auth, async (req, res) => {
             registration.status = 'Attended';
             await registration.save();
             
-            await sendCertificate(volunteer, event, ngoOrganizer, registration._id);
+            await sendCertificate(volunteer, event, ngoOrganizer, registration._id, ngoOrganizer.ngoName);
 
             res.json({ 
                 msg: 'Attendance verified, volunteer points updated, and certificate sent.', 

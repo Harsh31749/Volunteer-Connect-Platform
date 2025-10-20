@@ -3,7 +3,6 @@ const router = express.Router();
 const Event = require('../models/Event');
 const auth = require('../middleware/auth'); 
 
-// Apply authentication and role restriction to ALL routes in this file
 router.use(auth, (req, res, next) => {
     // req.user.role is available due to previous fix in auth.js
     if (req.user.role !== 'ngo') {
