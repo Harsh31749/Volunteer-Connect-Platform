@@ -62,11 +62,56 @@ const VolunteerDashboard = () => {
         }
     };
 
-    // New handler function to trigger certificate download
-    const handleDownloadCertificate = (regId) => {
-        // The API sends the PDF file directly, so we use a window.open call to trigger the browser's download dialog
-        window.open(`/api/volunteers/certificate/${regId}/download`, '_blank');
+    // --- CORRECTED DOWNLOAD HANDLER: Uses Axios to fetch the Blob securely ---
+    const handleDownloadCertificate = async (regId, eventTitle) => {
+        try {
+            // 1. Make an authenticated GET request to fetch the PDF as a Blob
+            const response = await axios.get(
+                `/api/volunteers/certificate/${regId}/download`,
+                {
+                    responseType: 'blob', // IMPORTANT: tells axios to handle the response as binary data
+                }
+            );
+
+            // 2. Create a temporary URL for the Blob data
+            const blob = new Blob([response.data], { type: 'application/pdf' });
+            const url = window.URL.createObjectURL(blob);
+            
+            // 3. Create a hidden link and simulate a click to trigger download
+            const link = document.createElement('a');
+            link.href = url;
+            // Use the event title for a user-friendly filename
+            link.setAttribute('download', `certificate_${eventTitle?.replace(/\s/g, '_') || 'Event'}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            
+            // 4. Clean up the temporary URL and link
+            link.remove();
+            window.URL.revokeObjectURL(url);
+            alert('Certificate download successful!');
+
+        } catch (err) {
+            console.error('Certificate download failed:', err);
+            
+            // --- Improved Error Handling for Failed Blob Response (e.g., 401, 404) ---
+            if (err.response && err.response.data instanceof Blob) {
+                const reader = new FileReader();
+                reader.onload = function() {
+                    try {
+                        const errorJson = JSON.parse(reader.result);
+                        // Display the specific error message from the server (e.g., "Registration not found.")
+                        alert(errorJson.msg || 'Failed to download certificate.');
+                    } catch (e) {
+                         alert('Failed to download certificate. Check server response.');
+                    }
+                };
+                reader.readAsText(err.response.data);
+            } else {
+                 alert(err.response?.data?.msg || 'Failed to download certificate. Please check server status.');
+            }
+        }
     };
+    // ------------------------------------------------------------------------
 
     if (loading) return <h1 style={{textAlign: 'center', fontSize: '20px', marginTop: '50px'}}>Loading your dashboard...</h1>;
 
@@ -142,10 +187,11 @@ const VolunteerDashboard = () => {
                                 <h3>{reg.event?.title || 'Unknown Event'}</h3>
                                 <p>Date: {new Date(reg.event?.date).toLocaleDateString()}</p>
                                 <p style={{color: 'var(--color-success)', fontWeight: 'bold'}}>Status: Attended</p>
-                                {/* NEW BUTTON for certificate download */}
+                                {/* UPDATED BUTTON for authenticated download */}
                                 {reg.status === 'Attended' && (
                                     <button 
-                                        onClick={() => handleDownloadCertificate(reg._id)} 
+                                        // Pass event title for cleaner filename
+                                        onClick={() => handleDownloadCertificate(reg._id, reg.event?.title)} 
                                         style={{
                                             marginTop: '10px', 
                                             padding: '8px 15px', 
@@ -159,7 +205,7 @@ const VolunteerDashboard = () => {
                                         Download Certificate 📜
                                     </button>
                                 )}
-                                {/* END NEW BUTTON */}
+                                {/* END UPDATED BUTTON */}
                             </div>
                         ))}
                     </div>

@@ -7,7 +7,7 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('./models/User');
 const jwt = require('jsonwebtoken');
 const userRoutes = require('./routes/userRoutes');
-
+const volunteerRoutes = require('./routes/volunteerRoutes');
 
 require('dotenv').config();
 
@@ -74,7 +74,7 @@ app.use('/api/events', require('./routes/eventRoutes'));
 app.use('/api/registrations', require('./routes/registrationRoutes'));
 app.use('/api/volunteers', require('./routes/volunteerRoutes'));
 app.use('/api/ngo', require('./routes/ngoRoutes'));
-
+app.use('/api/volunteers', require('./routes/volunteerRoutes'));
 
 if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development') { 
     

@@ -4,7 +4,7 @@ const Registration = require('../models/Registration');
 const auth = require('../middleware/auth');
 const Event = require('../models/Event');
 const User = require('../models/User');
-const PDFDocument = require('pdfkit');
+const PDFDocument = require('pdfkit'); 
 const emailService = require('../utils/emailService');
 
 router.use(auth, (req, res, next) => {
@@ -110,40 +110,44 @@ router.get('/certificate/:regId/download', async (req, res) => {
     try {
         const registration = await Registration.findById(req.params.regId).populate('event');
 
-        if (!registration || !registration.event) {
-            return res.status(404).json({ msg: 'Registration or associated event not found.' });
+        if (!registration) {
+            return res.status(404).json({msg: 'Registration not found.' });
         }
         if (registration.volunteer.toString() !== req.user.id) {
-            return res.status(403).json({ msg: 'Unauthorized: Registration does not belong to this volunteer.' });
+            return res.status(403).json({msg: 'Unauthorized: Registration does not belong to this volunteer.' });
         }
         if (registration.status !== 'Attended') {
-            return res.status(400).json({ msg: 'Certificate can only be downloaded for attended events.' });
+            return res.status(400).json({msg: 'Certificate can only be downloaded for attended events.' });
+        }
+        if (!registration.event) {
+            return res.status(404).json({msg: 'Event associated with registration not found.' });
         }
 
         const event = registration.event;
         const volunteer = await User.findById(req.user.id);
-        const ngoOrganizer = await User.findById(event.ngo);
+        const ngoOrganizer = await User.findById(event.ngo); // event.ngo is the ObjectId of the NGO user
 
         if (!volunteer || !ngoOrganizer) {
-            return res.status(500).json({ msg: 'Internal server error: Associated user record for certificate is missing.' });
+            return res.status(404).json({msg: 'Associated user record (volunteer or NGO) not found for certificate generation.' });
         }
+        
+        const ngoName = ngoOrganizer.ngoName || 'Unknown NGO'; // Safely access ngoName
 
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename="certificate_${registration._id}.pdf"`);
 
-        const doc = new PDFDocument();
+        const doc = new PDFDocument({ size: 'A4', layout: 'landscape' });
+        doc.pipe(res); // Pipe the PDF document stream directly to the response stream
 
-        doc.pipe(res);
-
-        emailService.generateCertificatePDF(doc, volunteer, event, ngoOrganizer.ngoName, registration._id);
+        emailService.generateCertificatePDF(doc, volunteer, event, ngoName, registration._id);
 
         doc.end();
 
     } catch (err) {
-        console.error('Certificate download error:', err.message);
+        console.error('Certificate download streaming error:', err.message);
 
         if (!res.headersSent) {
-            return res.status(500).json({ msg: 'Server Error during certificate download.', error: err.message });
+            return res.status(500).json({msg: 'Server Error during certificate download: A core component failed to generate the PDF.', error: err.message });
         }
     }
 });

@@ -20,11 +20,9 @@ const CertificateVerifier = () => {
         }
 
         try {
-            // Public API call to GET /api/events/verify-certificate/:regId
             const res = await axios.get(`/api/events/verify-certificate/${regId}`);
             setResult(res.data);
         } catch (err) {
-            // Handle 404s and server errors gracefully
             const msg = err.response?.data?.msg || 'Verification failed. Server communication error.';
             setError(msg);
         } finally {
@@ -35,14 +33,10 @@ const CertificateVerifier = () => {
     const renderResult = () => {
         if (!result) return null;
 
-        // FIX: Use optional chaining and map properties to server response
         const volunteerName = result.details?.volunteerName || 'N/A';
         const eventTitle = result.details?.eventTitle || 'N/A';
-        // FIX: Server returns 'organizedBy', not 'ngoName'
         const organizedBy = result.details?.organizedBy || 'N/A'; 
         
-        // Note: The server only returns the event date if the necessary field was included 
-        // in the populated Event object and exposed in the details object. Assuming a date field exists.
         const eventDate = result.details?.eventDate ? new Date(result.details.eventDate).toDateString() : 'N/A';
 
         if (result.isValid) {
