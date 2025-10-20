@@ -62,6 +62,12 @@ const VolunteerDashboard = () => {
         }
     };
 
+    // New handler function to trigger certificate download
+    const handleDownloadCertificate = (regId) => {
+        // The API sends the PDF file directly, so we use a window.open call to trigger the browser's download dialog
+        window.open(`/api/volunteers/certificate/${regId}/download`, '_blank');
+    };
+
     if (loading) return <h1 style={{textAlign: 'center', fontSize: '20px', marginTop: '50px'}}>Loading your dashboard...</h1>;
 
     const { upcoming, history, metrics, recommendations } = dashboardData;
@@ -136,6 +142,24 @@ const VolunteerDashboard = () => {
                                 <h3>{reg.event?.title || 'Unknown Event'}</h3>
                                 <p>Date: {new Date(reg.event?.date).toLocaleDateString()}</p>
                                 <p style={{color: 'var(--color-success)', fontWeight: 'bold'}}>Status: Attended</p>
+                                {/* NEW BUTTON for certificate download */}
+                                {reg.status === 'Attended' && (
+                                    <button 
+                                        onClick={() => handleDownloadCertificate(reg._id)} 
+                                        style={{
+                                            marginTop: '10px', 
+                                            padding: '8px 15px', 
+                                            backgroundColor: 'var(--color-primary)', 
+                                            color: 'white', 
+                                            border: 'none', 
+                                            borderRadius: '4px', 
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Download Certificate 📜
+                                    </button>
+                                )}
+                                {/* END NEW BUTTON */}
                             </div>
                         ))}
                     </div>
