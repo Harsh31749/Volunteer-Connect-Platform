@@ -5,7 +5,6 @@ const Registration = require('../models/Registration');
 const auth = require('../middleware/auth');
 const mongoose = require('mongoose'); // Need to import mongoose for ObjectId check
 
-// POST /api/events (NGO Only)
 router.post('/', auth, async (req, res) => {
     if (req.user.role !== 'ngo') {
         return res.status(403).json({ msg: 'Access denied. Must be an NGO to create events.' });

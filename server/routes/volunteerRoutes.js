@@ -4,8 +4,9 @@ const Registration = require('../models/Registration');
 const auth = require('../middleware/auth');
 const Event = require('../models/Event');
 const User = require('../models/User');
+const PDFDocument = require('pdfkit');
+const emailService = require('../utils/emailService');
 
-// Middleware to restrict access to authenticated volunteers
 router.use(auth, (req, res, next) => {
     if (req.user.role !== 'volunteer') {
         return res.status(403).json({ msg: 'Access denied. Volunteer role required.' });
@@ -13,17 +14,14 @@ router.use(auth, (req, res, next) => {
     next();
 });
 
-// GET /api/volunteers/dashboard/upcoming - Upcoming events user is registered for
 router.get('/dashboard/upcoming', async (req, res) => {
     try {
         const tomorrow = new Date();
-        // Sets date to tomorrow to strictly filter for future events
         tomorrow.setDate(tomorrow.getDate() + 1); 
 
         const registrations = await Registration.find({ volunteer: req.user.id, status: { $in: ['Pending', 'Confirmed'] } })
         .populate({ path: 'event', select: 'title location date category capacity ngo', match: { date: { $gte: tomorrow } } });
         
-        // Filter out registrations whose events were deleted or don't match the date filter
         const validRegistrations = registrations.filter(reg => reg.event !== null);
 
         res.json(validRegistrations);
@@ -34,17 +32,13 @@ router.get('/dashboard/upcoming', async (req, res) => {
     }
 });
 
-// GET /api/volunteers/dashboard/history - Events user has attended
 router.get('/dashboard/history', async (req, res) => {
     try {
         let history = await Registration.find({ volunteer: req.user.id, status: 'Attended' })
         .populate('event', 'title location date category');
-        // Removed original, unreliable `.sort()` method.
         
-        // Filter out registrations whose events were deleted
         history = history.filter(reg => reg.event !== null);
 
-        // FIX: Robust in-memory sort (descending date - most recent first)
         history.sort((a, b) => {
             const dateA = a.event.date.getTime();
             const dateB = b.event.date.getTime();
@@ -59,12 +53,10 @@ router.get('/dashboard/history', async (req, res) => {
     }
 });
 
-// GET /api/volunteers/metrics - Simple volunteer metrics
 router.get('/metrics', async (req, res) => {
     try {
         const eventsAttended = await Registration.countDocuments({ volunteer: req.user.id, status: 'Attended' });
 
-        // Fetch user data to display points, which is a key metric
         const user = await User.findById(req.user.id, 'volunteerPoints badges');
         
         res.json({ 
@@ -79,7 +71,6 @@ router.get('/metrics', async (req, res) => {
     }
 });
 
-// GET /api/volunteers/recommendations - Recommends events based on past attended categories
 router.get('/recommendations', async (req, res) => {
     try {
         const attendedRegistrations = await Registration.find({ volunteer: req.user.id, status: 'Attended' })
@@ -94,12 +85,10 @@ router.get('/recommendations', async (req, res) => {
             }
         });
 
-        // Get the top 2 most attended categories
         const topCategories = Object.keys(categoryCounts).sort((a, b) => categoryCounts[b] - categoryCounts[a]).slice(0, 2); 
 
         let recommendations = [];
         if (topCategories.length > 0) {
-            // Find open, future events matching the top categories
             recommendations = await Event.find({
                 category: { $in: topCategories },
                 date: { $gte: new Date() },
@@ -114,6 +103,48 @@ router.get('/recommendations', async (req, res) => {
     } catch (err) { 
         console.error('Recommendation error:', err.message);
         res.status(500).json({ msg: 'Server Error while fetching recommendations.', error: err.message }); 
+    }
+});
+
+router.get('/certificate/:regId/download', async (req, res) => {
+    try {
+        const registration = await Registration.findById(req.params.regId).populate('event');
+
+        if (!registration || !registration.event) {
+            return res.status(404).json({ msg: 'Registration or associated event not found.' });
+        }
+        if (registration.volunteer.toString() !== req.user.id) {
+            return res.status(403).json({ msg: 'Unauthorized: Registration does not belong to this volunteer.' });
+        }
+        if (registration.status !== 'Attended') {
+            return res.status(400).json({ msg: 'Certificate can only be downloaded for attended events.' });
+        }
+
+        const event = registration.event;
+        const volunteer = await User.findById(req.user.id);
+        const ngoOrganizer = await User.findById(event.ngo);
+
+        if (!volunteer || !ngoOrganizer) {
+            return res.status(500).json({ msg: 'Internal server error: Associated user record for certificate is missing.' });
+        }
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="certificate_${registration._id}.pdf"`);
+
+        const doc = new PDFDocument();
+
+        doc.pipe(res);
+
+        emailService.generateCertificatePDF(doc, volunteer, event, ngoOrganizer.ngoName, registration._id);
+
+        doc.end();
+
+    } catch (err) {
+        console.error('Certificate download error:', err.message);
+
+        if (!res.headersSent) {
+            return res.status(500).json({ msg: 'Server Error during certificate download.', error: err.message });
+        }
     }
 });
 
