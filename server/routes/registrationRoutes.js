@@ -9,7 +9,7 @@ const emailService = require('../utils/emailService');
 
 const sendCertificate = (volunteer, event, ngoOrganizer, registrationId, ngoName) => {
     return new Promise(async (resolve, reject) => {
-        const doc = new PDFDocument({ size: 'A5', layout: 'landscape' }); 
+        const doc = new PDFDocument({ size: 'A4', layout: 'landscape' }); 
         const buffers = [];
 
         doc.on('data', buffers.push.bind(buffers));

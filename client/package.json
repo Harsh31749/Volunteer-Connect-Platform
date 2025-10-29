@@ -16,7 +16,6 @@
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.9.4",
     "react-scripts": "^5.0.1",
-    "tailwind": "^2.3.1",
     "web-vitals": "^5.1.0"
   },
   "proxy": "http://localhost:5000",
@@ -24,8 +23,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "tw-init": "tailwindcss init -p"
+    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": [
@@ -45,10 +43,15 @@
       "last 1 safari version"
     ]
   },
-  "postcss": {
+"postcss": {
     "plugins": {
       "tailwindcss": {},
       "autoprefixer": {}
     }
+  },
+    "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.18"
   }
 }

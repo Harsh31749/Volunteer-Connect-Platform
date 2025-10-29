@@ -8,7 +8,6 @@ const EventDetails = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const { id } = useParams();
-    // user contains {id, email, role, ...} after our AuthContext fixes
     const { user } = useAuth();
     const navigate = useNavigate();
 
@@ -38,7 +37,7 @@ const EventDetails = () => {
         }
 
         try {
-            // API call to the POST /api/registrations/:eventId route
+            // API call to the POST /api/registrations/:eventId route (Logic preserved)
             const res = await axios.post(`/api/registrations/${id}`);
             alert(res.data.msg || 'Registration successful!');
             // Redirect to volunteer dashboard after successful registration
@@ -51,72 +50,112 @@ const EventDetails = () => {
     };
 
     const getRegistrationButton = () => {
+        if (!event) return null; // Should be covered by loading/error state but good practice
+
         if (!user) {
-            // The button action is handled by the initial check in handleRegistration
-            return <button className="btn-vibrant" style={{background: 'var(--color-primary)'}} onClick={handleRegistration}>Login to Register</button>;
+            // The button action handles login redirection internally
+            return (
+                <button 
+                    className="w-full md:w-auto py-3 px-10 text-lg font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-150 shadow-md"
+                    onClick={handleRegistration}
+                >
+                    Login to Volunteer
+                </button>
+            );
         }
         if (user.role !== 'volunteer') {
-            return <p style={{color: 'var(--color-text-light)'}}>Only Volunteers can register for events.</p>;
+            return <p className="text-gray-500 text-center font-medium">Only Volunteers can register for events.</p>;
         }
 
         // Volunteer is logged in and eligible
         return (
             <button 
-                className="btn-vibrant"
+                className="w-full md:w-auto py-3 px-10 text-xl font-bold bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-150 shadow-xl focus:outline-none focus:ring-4 focus:ring-green-300"
                 onClick={handleRegistration}
-                style={{ fontSize: '1.2rem', padding: '15px 40px' }}
             >
                 Volunteer Now
             </button>
         );
     };
 
-    if (loading) return <h1 style={{textAlign: 'center', fontSize: '20px', marginTop: '50px', color: 'var(--color-text-light)'}}>Loading event details...</h1>;
-    if (error) return <div style={{padding: '15px', backgroundColor: '#dc3545', color: 'white', borderRadius: '5px', maxWidth: '600px', margin: '50px auto'}}>{error}</div>;
-    if (!event) return <h1 style={{textAlign: 'center', fontSize: '20px', marginTop: '50px', color: 'var(--color-text-light)'}}>Event data is missing.</h1>;
+    // --- Loading and Error States ---
+    if (loading) return (
+        <div className="text-center text-xl text-gray-700 mt-12">
+            Loading event details...
+        </div>
+    );
+    if (error) return (
+        <div className="max-w-xl mx-auto mt-10 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded-lg shadow-md">
+            {error}
+        </div>
+    );
+    if (!event) return (
+        <div className="text-center text-xl text-gray-700 mt-12">
+            Event data is missing.
+        </div>
+    );
 
-    // FIX: Use optional chaining (?.) for safely accessing populated NGO data
+    // Data Formatting
     const ngoName = event.ngo?.ngoName || 'N/A';
     const eventDate = new Date(event.date).toDateString();
 
-    return (
-        <div style={{ background: 'var(--color-background)', minHeight: '100vh', padding: '30px 0' }}>
-            <div className="container-fluid" style={{ maxWidth: '900px', margin: '0 auto' }}>
-                <Link to="/" style={{color: 'var(--color-text-light)', marginBottom: '20px', display: 'block'}}>
-                    <i className="fas fa-arrow-left" style={{marginRight: '8px'}}></i> Back to Events
+return (
+        <div className="min-h-screen bg-gray-50 py-8">
+            <div className="container mx-auto px-4 max-w-4xl">
+                {/* Back Link */}
+                <Link 
+                    to="/" 
+                    className="flex items-center mb-6 text-gray-500 hover:text-indigo-600 transition duration-150"
+                >
+                    {/* Size reduced from w-5 h-5 to w-4 h-4 for subtle link icon */}
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    Back to Events
                 </Link>
                 
-                <div style={{backgroundColor: 'var(--color-card-bg)', padding: '40px', borderRadius: '12px', boxShadow: '0 10px 30px var(--color-shadow)'}}>
+                {/* Main Event Card */}
+                <div className="bg-white p-6 lg:p-10 rounded-xl shadow-2xl">
                     
-                    <h1 style={{fontSize: '2.5rem', fontWeight: 700, color: 'var(--color-text)', marginBottom: '0.5rem'}}>{event.title}</h1>
-                    <p style={{color: 'var(--color-text-light)', marginBottom: '20px'}}>{event.description}</p>
+                    {/* Title and Description */}
+                    <h1 className="text-3xl lg:text-4xl font-extrabold text-gray-900 mb-2">{event.title}</h1>
+                    <p className="text-lg text-gray-600 mb-6">{event.description}</p>
                     
-                    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px 40px', padding: '20px 0', borderTop: '1px solid #eee', borderBottom: '1px solid #eee', marginBottom: '30px', fontSize: '16px'}}>
+                    {/* Key Details Section (Icons reduced from w-6 h-6 to w-5 h-5) */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-8 border-t border-b border-gray-200 py-6 mb-8 text-base">
                         
-                        <div style={{display: 'flex', alignItems: 'center'}}>
-                            <i className="fas fa-building" style={{color: 'var(--color-primary)', marginRight: '10px'}}></i>
-                            <strong>Organized By:</strong> {ngoName}
+                        {/* Organized By */}
+                        <div className="flex items-center text-gray-700">
+                            <svg className="w-5 h-5 text-indigo-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2V5zM4 9a2 2 0 012-2h7a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V9zM2 13a2 2 0 012-2h7a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2z"></path></svg>
+                            <strong>Organized By:</strong> <span className="ml-2 font-medium">{ngoName}</span>
                         </div>
-                        <div style={{display: 'flex', alignItems: 'center'}}>
-                            <i className="fas fa-calendar-alt" style={{color: 'var(--color-success)', marginRight: '10px'}}></i>
-                            <strong>Date:</strong> {eventDate}
+                        
+                        {/* Date */}
+                        <div className="flex items-center text-gray-700">
+                            <svg className="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <strong>Date:</strong> <span className="ml-2 font-medium">{eventDate}</span>
                         </div>
-                        <div style={{display: 'flex', alignItems: 'center'}}>
-                            <i className="fas fa-map-marker-alt" style={{color: 'var(--color-secondary)', marginRight: '10px'}}></i>
-                            <strong>Location:</strong> {event.location}
+                        
+                        {/* Location */}
+                        <div className="flex items-center text-gray-700">
+                            <svg className="w-5 h-5 text-orange-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            <strong>Location:</strong> <span className="ml-2 font-medium">{event.location}</span>
                         </div>
-                        <div style={{display: 'flex', alignItems: 'center'}}>
-                            <i className="fas fa-users" style={{color: 'var(--color-text)', marginRight: '10px'}}></i>
-                            <strong>Slots Available:</strong> {event.capacity}
+                        
+                        {/* Slots Available */}
+                        <div className="flex items-center text-gray-700">
+                            <svg className="w-5 h-5 text-blue-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20v-2c0-.5-.118-1.002-.356-1.556m0 0H7m-4.444 0a1 1 0 01-1.332-1.332M4 12v-1c0-1.657 1.343-3 3-3h10c1.657 0 3 1.343 3 3v1m-4 4h2m-2 0a2 2 0 11-4 0m4 0a2 2 0 10-4 0m-3-3V5m0 0h2m-2 0H8m4 0h2"></path></svg>
+                            <strong>Slots:</strong> <span className="ml-2 font-medium">{event.capacity}</span>
                         </div>
-                        <div style={{display: 'flex', alignItems: 'center'}}>
-                            <i className="fas fa-tag" style={{color: 'var(--color-primary)', marginRight: '10px'}}></i>
-                            <strong>Category:</strong> {event.category}
+                        
+                        {/* Category */}
+                        <div className="flex items-center text-gray-700">
+                            <svg className="w-5 h-5 text-indigo-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h10m0 0v10m0-10L7 17"></path></svg>
+                            <strong>Category:</strong> <span className="ml-2 font-medium">{event.category}</span>
                         </div>
 
                     </div>
 
-                    <div style={{textAlign: 'center'}}>
+                    {/* Registration/Action Button */}
+                    <div className="text-center pt-4">
                         {getRegistrationButton()}
                     </div>
                 </div>

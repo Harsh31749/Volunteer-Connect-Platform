@@ -13,7 +13,7 @@ const NGODashboard = () => {
     const [selectedEventId, setSelectedEventId] = useState(null); 
 
     useEffect(() => {
-        if (user && user.role === 'ngo') {
+        if (user && user.role === 'ngo' && currentView === 'list') {
             fetchNgoEvents();
         }
     }, [user, currentView]); 
@@ -21,7 +21,6 @@ const NGODashboard = () => {
     const fetchNgoEvents = async () => {
         setLoading(true);
         try {
-            // This endpoint enforces that only the logged-in NGO's events are returned
             const res = await axios.get('/api/ngo/events');
             setEvents(res.data);
         } catch (err) {
@@ -31,9 +30,12 @@ const NGODashboard = () => {
         }
     };
 
-    if (loading) return <h1 style={{textAlign: 'center', fontSize: '20px', marginTop: '50px'}}>Loading Host Panel...</h1>;
+    if (loading) return (
+        <div className="text-center text-xl text-gray-700 mt-12">
+            Loading Host Panel...
+        </div>
+    );
 
-    // --- RENDER LOGIC BASED ON currentView STATE ---
 
     if (currentView === 'create') {
         return <CreateEvent onEventCreated={() => setCurrentView('list')} onBack={() => setCurrentView('list')} />;
@@ -45,67 +47,72 @@ const NGODashboard = () => {
                 eventId={selectedEventId} 
                 onBack={() => { 
                     setSelectedEventId(null); 
-                    // Refetches events automatically because currentView changes
                     setCurrentView('list'); 
                 }} 
             />
         );
     }
 
-    // Default View: Event List (currentView === 'list')
     return (
-        <div style={{ background: 'var(--color-background)', minHeight: '100vh', paddingBottom: '3rem' }}>
-            <div className="container-fluid" style={{padding: '30px 0'}}>
-                <h1 style={{ color: 'var(--color-primary)', fontSize: '2.5rem', marginBottom: '0.5rem' }}>
+        <div className="min-h-screen bg-gray-50 py-8">
+            <div className="container mx-auto px-4 max-w-6xl">
+                
+                <h1 className="text-3xl lg:text-4xl font-extrabold text-indigo-700 mb-2">
                     Host Panel
                 </h1>
-                <p style={{ color: 'var(--color-text-light)', fontSize: '1.2rem', marginBottom: '1.5rem' }}>
-                    {/* FIX: Used optional chaining (?.) for robust access to user.ngoName */}
-                    Welcome, {user?.ngoName || 'Organizer'}! Manage your listings and volunteers.
+                <p className="text-lg text-gray-600 mb-8">
+                    Welcome, <span className="font-semibold text-gray-800">{user?.ngoName || 'Organizer'}</span>! Manage your listings and volunteers.
                 </p>
 
                 <button 
                     onClick={() => setCurrentView('create')} 
-                    className="btn-vibrant" 
-                    style={{ marginBottom: '2rem' }}
+                    className="flex items-center justify-center space-x-2 bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-indigo-700 transition duration-150 shadow-md hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-50 mb-8"
                 >
-                    <i className="fas fa-plus" style={{marginRight: '8px'}}></i> List New Opportunity
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                    <span>List New Opportunity</span>
                 </button>
                 
-                {/* Main Events Container */}
-                <div style={{ background: 'var(--color-card-bg)', padding: '2rem', borderRadius: '12px', boxShadow: '0 8px 25px var(--color-shadow)' }}>
-                    <h2 style={{ color: 'var(--color-text)', marginBottom: '1rem', borderBottom: '2px solid #eee', paddingBottom: '10px' }}>
+                <div className="bg-white p-6 md:p-8 shadow-2xl rounded-xl">
+                    <h2 className="text-2xl font-bold text-gray-800 border-b border-gray-200 pb-3 mb-4">
                         Your Organized Events ({events.length})
                     </h2>
                     
                     {events.length === 0 ? (
-                        <p style={{textAlign: 'center', color: 'var(--color-text-light)', padding: '20px'}}>
-                            You have not created any events yet. Click "List New Opportunity" to start.
-                        </p>
+                        <div className="text-center p-8 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                            <p className="text-lg text-gray-500">
+                                You have not created any events yet. Click "List New Opportunity" to start.
+                            </p>
+                        </div>
                     ) : (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '25px', marginTop: '15px' }}>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {events.map(event => (
-                                <div key={event._id} style={{
-                                    backgroundColor: '#fff', 
-                                    padding: '20px', 
-                                    borderRadius: '10px', 
-                                    boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
-                                    // Accent based on status
-                                    borderLeft: event.status === 'Open' ? '5px solid var(--color-success)' : '5px solid var(--color-text-light)',
-                                    transition: 'box-shadow 0.2s'
-                                }}>
-                                    <h3 style={{fontSize: '18px', marginBottom: '5px', color: 'var(--color-primary)'}}>{event.title}</h3>
-                                    <p style={{fontSize: '14px', color: 'var(--color-text-light)'}}>Date: {new Date(event.date).toLocaleDateString()}</p>
-                                    <p style={{fontSize: '14px', marginBottom: '15px'}}>Status: <span style={{fontWeight: 600}}>{event.status}</span> | Capacity: {event.capacity}</p>
+                                <div 
+                                    key={event._id} 
+                                    className={`bg-white p-5 rounded-lg shadow-md transition duration-200 hover:shadow-lg border-l-4 ${event.status === 'Open' ? 'border-green-500' : 'border-gray-400'}`}
+                                >
+                                    <h3 className="text-xl font-semibold text-gray-900 mb-1 line-clamp-2">
+                                        {event.title}
+                                    </h3>
+                                    <p className="text-sm text-gray-500">
+                                        Date: {new Date(event.date).toLocaleDateString()}
+                                    </p>
+                                    <p className="text-sm mb-4">
+                                        Status: 
+                                        <span className={`font-bold ml-1 ${event.status === 'Open' ? 'text-green-600' : 'text-gray-600'}`}>
+                                            {event.status}
+                                        </span>
+                                        <span className="text-gray-500 mx-2">|</span>
+                                        Capacity: <span className="font-medium">{event.capacity}</span>
+                                    </p>
                                     
                                     <button 
                                         onClick={() => {
                                             setSelectedEventId(event._id);
                                             setCurrentView('manage');
                                         }} 
-                                        className="btn-primary" 
-                                        style={{ backgroundColor: 'var(--color-primary)', color: 'white', padding: '8px 15px', borderRadius: '5px', fontSize: '14px' }}
+                                        className="w-full inline-flex justify-center items-center bg-indigo-500 text-white py-2 px-3 rounded-md text-sm font-medium hover:bg-indigo-600 transition duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                                     >
+                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20v-2c0-.5-.118-1.002-.356-1.556m-2.644 1.556h-2M12 11V3m0 0h2m-2 0H10m2 0v8m-4 4h8m-8 0a2 2 0 114 0m-4 0a2 2 0 114 0"></path></svg>
                                         Manage Volunteers
                                     </button>
                                 </div>

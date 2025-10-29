@@ -1,69 +1,63 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const EventCard = ({ event }) => {
-    // Format date for clean display
-    const eventDate = new Date(event.date).toLocaleDateString('en-US', {
-        year: 'numeric', month: 'short', day: 'numeric'
-    });
+function EventCard({ event }) {
+  const date = new Date(event.date).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 
-    return (
-        <div style={{
-            // ... (UI styles unchanged)
-            minHeight: '320px'
-        }}>
-            <div>
-                {/* Title */}
-                <h3 style={{
-                    fontSize: '20px', 
-                    fontWeight: 700, 
-                    color: 'var(--color-text)', 
-                    marginBottom: '8px'
-                }}>
-                    {event.title}
-                </h3>
-                
-                {/* NGO Name - FIX: Added optional chaining (?.) for robust rendering */}
-                <p style={{
-                    fontSize: '14px', 
-                    color: 'var(--color-text-light)', 
-                    marginBottom: '15px'
-                }}>
-                    Organized by: {event.ngo?.ngoName || 'N/A'}
-                </p>
-
-                {/* Details List */}
-                <div style={{fontSize: '15px', color: 'var(--color-text)'}}>
-                    <p style={{marginBottom: '5px', fontWeight: 600}}>
-                        <i className="fas fa-tag" style={{color: 'var(--color-secondary)', marginRight: '8px'}}></i> Category: {event.category}
-                    </p>
-                    <p style={{marginBottom: '5px'}}>
-                        <i className="fas fa-map-marker-alt" style={{color: '#dc3545', marginRight: '8px'}}></i> Location: {event.location}
-                    </p>
-                    <p style={{marginBottom: '5px'}}>
-                        <i className="fas fa-calendar-alt" style={{color: 'var(--color-primary)', marginRight: '8px'}}></i> Date: {eventDate}
-                    </p>
-                    <p>
-                        <i className="fas fa-users" style={{color: 'var(--color-success)', marginRight: '8px'}}></i> Slots Available: {event.capacity}
-                    </p>
-                </div>
-            </div>
-
-            {/* Action Button */}
-            <Link 
-                to={`/events/${event._id}`} 
-                className="btn-vibrant"
-                style={{ 
-                    marginTop: '20px', 
-                    textAlign: 'center',
-                    width: '100%',
-                    display: 'block'
-                }}
-            >
-                View Details & Apply
-            </Link>
+  return (
+    <div className="bg-white p-6 shadow-xl rounded-xl transition duration-300 hover:shadow-2xl flex flex-col justify-between"
+             style={{ minHeight: '320px' }}>
+      
+      <div>
+        <div className="mb-4">
+          <h3 className="text-xl font-bold text-gray-900 mb-1 leading-snug line-clamp-2">
+            {event.title}
+          </h3>
+          <p className="text-sm font-medium text-indigo-600 mt-1">
+            Organized by: {event.ngo?.ngoName || 'N/A'}
+          </p>
         </div>
-    );
-};
+
+        {/* Details List */}
+        <div className="text-base text-gray-700 space-y-3">
+            {/* Category */}
+            <p className="flex items-center">
+                <i className="fas fa-tag text-indigo-500 mr-3 w-4 h-4 text-center"></i> 
+                <span className="font-semibold">Category: </span> {event.category}
+            </p>
+            {/* Location */}
+            <p className="flex items-center">
+                <i className="fas fa-map-marker-alt text-red-500 mr-3 w-4 h-4 text-center"></i> 
+                <span className="font-semibold">Location: </span> {event.location}
+            </p>
+            {/* Date */}
+            <p className="flex items-center">
+                <i className="fas fa-calendar-alt text-blue-500 mr-3 w-4 h-4 text-center"></i> 
+                <span className="font-semibold">Date: </span> {date}
+            </p>
+            {/* Slots */}
+            <p className="flex items-center">
+                <i className="fas fa-users text-green-500 mr-3 w-4 h-4 text-center"></i> 
+                <span className="font-semibold">Slots Available: </span> {event.capacity}
+            </p>
+        </div>
+      </div>
+
+      {/* Action Button */}
+      <div className="mt-6">
+        <Link 
+          to={`/events/${event._id}`}
+          className="block w-full text-center bg-indigo-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-indigo-700 transition duration-150 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        >
+          View Details & Apply
+        </Link>
+      </div>
+    </div>
+  );
+}
 
 export default EventCard;

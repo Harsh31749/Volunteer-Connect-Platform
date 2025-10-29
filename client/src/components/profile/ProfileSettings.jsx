@@ -57,56 +57,81 @@ const ProfileSettings = () => {
         }
 
         try {
-            // Submit data to the secured PUT /api/users/profile route
+            // Submit data to the secured PUT /api/users/profile route (Logic preserved)
             await axios.put('/api/users/profile', dataToUpdate);
             
-            // NOTE: The AuthContext should ideally be updated here (e.g., re-run loadUserProfile) 
-            // but the current implementation requires a full page refresh or relogin to see the name update in the NavBar.
             setMessage('Profile updated successfully!');
         } catch (err) {
             setError(err.response?.data?.msg || 'Failed to update profile.');
         }
     };
 
-    if (loading || authLoading) return <h1 style={{textAlign: 'center', fontSize: '20px', marginTop: '50px'}}>Loading profile settings...</h1>;
-    if (error && !message) return <div style={{color: 'white', backgroundColor: '#dc3545', padding: '10px', borderRadius: '4px', maxWidth: '600px', margin: '50px auto'}}>{error}</div>;
+    const inputStyle = 
+      "w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 " +
+      "placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 " +
+      "focus:border-indigo-500 transition duration-150 ease-in-out shadow-sm bg-white";
+
+    const labelStyle = "block text-sm font-medium text-gray-700 mb-2";
+
+    if (loading || authLoading) return (
+        <div className="text-center text-xl text-gray-700 mt-12">
+            Loading profile settings...
+        </div>
+    );
+    if (error && !message) return (
+        <div className="max-w-xl mx-auto mt-10 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded-lg shadow-md">
+            {error}
+        </div>
+    );
 
     const roleLabel = user.role === 'ngo' ? 'Host Organizer' : 'Volunteer';
+    const dashboardPath = user.role === 'ngo' ? '/dashboard/ngo' : '/dashboard/volunteer';
 
     return (
-        <div style={{ background: 'var(--color-background)', minHeight: '100vh', paddingTop: '30px', paddingBottom: '30px' }}>
-            <div className="container-fluid" style={{maxWidth: '800px'}}>
+        <div className="min-h-screen bg-gray-100 flex flex-col items-center py-12 px-4">
+            <div className="w-full max-w-4xl">
+                
                 {/* Back to Dashboard Link */}
-                <Link to={user.role === 'ngo' ? '/dashboard/ngo' : '/dashboard/volunteer'} style={{color: 'var(--color-primary)', display: 'block', marginBottom: '20px'}}>
-                    <i className="fas fa-arrow-left" style={{marginRight: '8px'}}></i> Back to Dashboard
+                <Link 
+                    to={dashboardPath} 
+                    className="flex items-center mb-6 text-indigo-600 hover:text-indigo-800 transition duration-150 font-medium"
+                >
+                    {/* SVG replacement for fas fa-arrow-left */}
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    Back to Dashboard
                 </Link>
                 
-                <h1 style={{ color: 'var(--color-primary)', fontSize: '2.5rem', marginBottom: '0.5rem' }}>
+                {/* Header */}
+                <h1 className="text-3xl lg:text-4xl font-extrabold text-gray-900 mb-2">
                     Account Settings
                 </h1>
-                <p style={{ color: 'var(--color-text-light)', fontSize: '1.2rem', marginBottom: '1.5rem' }}>
-                    Managing your **{roleLabel}** Profile.
+                <p className="text-lg text-gray-600 mb-8">
+                    Managing your <strong className="text-indigo-600">{roleLabel}</strong> Profile.
                 </p>
 
-                <form onSubmit={onSubmit} style={{
-                    backgroundColor: 'var(--color-card-bg)', 
-                    padding: '40px', 
-                    borderRadius: '12px', 
-                    boxShadow: '0 10px 30px var(--color-shadow)'
-                }}>
+                {/* Form Card */}
+                <form 
+                    onSubmit={onSubmit} 
+                    className="bg-white p-6 md:p-8 rounded-xl shadow-2xl space-y-6"
+                >
                     
-                    {/* Role / Email Status (Email field is read-only) */}
-                    <div style={{borderBottom: '1px solid #eee', paddingBottom: '20px', marginBottom: '20px'}}>
-                        <p style={{fontWeight: 600}}>Role: <span style={{color: 'var(--color-secondary)'}}>{roleLabel}</span></p>
-                        <p style={{fontSize: '14px', color: 'var(--color-text-light)'}}>Email: {formData.email} (Cannot be changed)</p>
+                    {/* Role / Email Status */}
+                    <div className="border-b border-gray-200 pb-4 mb-4">
+                        <p className="font-semibold text-gray-800 mb-1">
+                            Role: <span className="text-orange-600 font-bold">{roleLabel}</span>
+                        </p>
+                        <p className="text-sm text-gray-500">
+                            Email: {formData.email} (Primary identifier - cannot be changed)
+                        </p>
                     </div>
 
                     {/* Full Name */}
-                    <div style={{marginBottom: '20px'}}>
-                        <label style={{display: 'block', marginBottom: '5px', fontWeight: 600}}>Full Name</label>
+                    <div>
+                        <label htmlFor="name" className={labelStyle}>Full Name</label>
                         <input 
+                            id="name"
                             type="text" 
-                            style={{width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: 'var(--color-input-bg)'}} 
+                            className={inputStyle} 
                             name="name" 
                             value={formData.name} 
                             onChange={onChange} 
@@ -116,11 +141,12 @@ const ProfileSettings = () => {
 
                     {/* NGO Name (Only for NGO role) */}
                     {user.role === 'ngo' && (
-                        <div style={{marginBottom: '30px'}}>
-                            <label style={{display: 'block', marginBottom: '5px', fontWeight: 600}}>Organization Name</label>
+                        <div>
+                            <label htmlFor="ngoName" className={labelStyle}>Organization Name</label>
                             <input 
+                                id="ngoName"
                                 type="text" 
-                                style={{width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: 'var(--color-input-bg)'}} 
+                                className={inputStyle} 
                                 name="ngoName" 
                                 value={formData.ngoName} 
                                 onChange={onChange} 
@@ -130,10 +156,25 @@ const ProfileSettings = () => {
                     )}
                     
                     {/* Success/Error Message Display */}
-                    {message && <div style={{color: 'white', backgroundColor: 'var(--color-success)', padding: '10px', borderRadius: '4px', marginBottom: '15px'}}>{message}</div>}
-                    {error && <div style={{color: 'white', backgroundColor: '#dc3545', padding: '10px', borderRadius: '4px', marginBottom: '15px'}}>{error}</div>}
+                    {message && (
+                        <div className="rounded-lg bg-green-100 p-4 border-l-4 border-green-500 text-green-700 font-medium">
+                            {message}
+                        </div>
+                    )}
+                    {error && (
+                        <div className="rounded-lg bg-red-100 p-4 border-l-4 border-red-500 text-red-700 font-medium">
+                            {error}
+                        </div>
+                    )}
 
-                    <button type="submit" className="btn-vibrant" style={{fontWeight: 'bold'}}>
+                    {/* Submit Button */}
+                    <button 
+                        type="submit" 
+                        className="w-full flex justify-center py-3 px-4 border border-transparent 
+                                   rounded-lg shadow-lg text-base font-semibold text-white bg-indigo-600 
+                                   hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 
+                                   focus:ring-indigo-500 transition duration-150 ease-in-out"
+                    >
                         Save Changes
                     </button>
                 </form>
