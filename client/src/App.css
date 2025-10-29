@@ -1,3 +1,6 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 /* --- Global Variables (Define custom properties for colors and styling) --- */
 :root {
     --color-primary: #007bff; /* Example Primary Blue */

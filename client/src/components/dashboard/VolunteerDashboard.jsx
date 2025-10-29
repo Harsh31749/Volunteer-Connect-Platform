@@ -4,7 +4,6 @@ import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 
 const VolunteerDashboard = () => {
-    // FIX: Removed redundant profileName state, relying on user from context
     const { user } = useAuth();
     const [dashboardData, setDashboardData] = useState({
         upcoming: [],
@@ -15,7 +14,6 @@ const VolunteerDashboard = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Ensure user is loaded before fetching data
         if (user && user.role === 'volunteer') {
             fetchDashboardData();
         }
@@ -24,8 +22,6 @@ const VolunteerDashboard = () => {
     const fetchDashboardData = async () => {
         setLoading(true);
         try {
-            // FIX: Removed redundant '/api/users/profile' call. User data is in context.
-            // Use Promise.all for concurrent and efficient fetching of all dashboard data
             const [upcomingRes, historyRes, metricsRes, recRes] = await Promise.all([
                 axios.get('/api/volunteers/dashboard/upcoming'),
                 axios.get('/api/volunteers/dashboard/history'),
@@ -42,7 +38,6 @@ const VolunteerDashboard = () => {
 
         } catch (err) {
             console.error('Failed to fetch dashboard data:', err);
-            // Optionally, set a general error state for display
         } finally {
             setLoading(false);
         }
@@ -51,10 +46,8 @@ const VolunteerDashboard = () => {
     const handleCancel = async (regId) => {
         if (window.confirm('Are you sure you want to cancel your registration? This action cannot be undone.')) {
             try {
-                // API call to PUT /api/registrations/:regId/cancel
                 await axios.put(`/api/registrations/${regId}/cancel`);
                 alert('Registration successfully cancelled.');
-                // Refetch all data to update dashboard state completely
                 fetchDashboardData(); 
             } catch (err) {
                 alert(err.response?.data?.msg || 'Failed to cancel registration.');
@@ -62,30 +55,22 @@ const VolunteerDashboard = () => {
         }
     };
 
-    // --- CORRECTED DOWNLOAD HANDLER: Uses Axios to fetch the Blob securely ---
     const handleDownloadCertificate = async (regId, eventTitle) => {
         try {
-            // 1. Make an authenticated GET request to fetch the PDF as a Blob
             const response = await axios.get(
                 `/api/volunteers/certificate/${regId}/download`,
-                {
-                    responseType: 'blob', // IMPORTANT: tells axios to handle the response as binary data
-                }
+                { responseType: 'blob' }
             );
 
-            // 2. Create a temporary URL for the Blob data
             const blob = new Blob([response.data], { type: 'application/pdf' });
             const url = window.URL.createObjectURL(blob);
             
-            // 3. Create a hidden link and simulate a click to trigger download
             const link = document.createElement('a');
             link.href = url;
-            // Use the event title for a user-friendly filename
             link.setAttribute('download', `certificate_${eventTitle?.replace(/\s/g, '_') || 'Event'}.pdf`);
             document.body.appendChild(link);
             link.click();
             
-            // 4. Clean up the temporary URL and link
             link.remove();
             window.URL.revokeObjectURL(url);
             alert('Certificate download successful!');
@@ -93,13 +78,11 @@ const VolunteerDashboard = () => {
         } catch (err) {
             console.error('Certificate download failed:', err);
             
-            // --- Improved Error Handling for Failed Blob Response (e.g., 401, 404) ---
             if (err.response && err.response.data instanceof Blob) {
                 const reader = new FileReader();
                 reader.onload = function() {
                     try {
                         const errorJson = JSON.parse(reader.result);
-                        // Display the specific error message from the server (e.g., "Registration not found.")
                         alert(errorJson.msg || 'Failed to download certificate.');
                     } catch (e) {
                          alert('Failed to download certificate. Check server response.');
@@ -107,109 +90,137 @@ const VolunteerDashboard = () => {
                 };
                 reader.readAsText(err.response.data);
             } else {
-                 alert(err.response?.data?.msg || 'Failed to download certificate. Please check server status.');
+                alert(err.response?.data?.msg || 'Failed to download certificate. Please check server status.');
             }
         }
     };
     // ------------------------------------------------------------------------
 
-    if (loading) return <h1 style={{textAlign: 'center', fontSize: '20px', marginTop: '50px'}}>Loading your dashboard...</h1>;
+    if (loading) return <div className="text-center text-xl text-gray-700 mt-12">Loading your dashboard...</div>;
 
     const { upcoming, history, metrics, recommendations } = dashboardData;
-    // Use name directly from context, which is guaranteed to be up-to-date
     const displayName = user?.name || 'Volunteer'; 
 
     return (
-        <div className="container" style={{padding: '30px', background: 'var(--color-background)', minHeight: '100vh'}}>
-            <h1 style={{color: 'var(--color-primary)', fontSize: '2.5rem'}}>Volunteer Dashboard</h1>
-            
-            <p style={{color: 'var(--color-text-light)', fontSize: '1.2rem', marginBottom: '1.5rem'}}>
-                Welcome, {displayName}!
-            </p> 
-            
-            {/* Metrics Card */}
-            <div style={{ background: '#e0f7fa', borderLeft: '6px solid var(--color-primary)', padding: '2rem', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.08)', marginBottom: '2rem' }}>
-                <h2>Your Impact</h2>
-                <p style={{ color: 'var(--color-primary)', fontSize: '1.5rem', fontWeight: 'bold' }}>
-                    Volunteer Points: {metrics.volunteerPoints || 0}
-                </p>
-                <p>Events Attended: {metrics.totalEventsAttended || 0}</p>
-                <Link to="/settings" style={{ color: 'var(--color-secondary)' }}>Edit Profile Settings</Link>
-            </div>
-            
-            {/* Recommendations Section */}
-            {recommendations.length > 0 && (
-                <div style={{ background: '#fff0e5', padding: '2rem', borderRadius: '10px', borderLeft: '5px solid var(--color-secondary)', marginBottom: '2rem' }}>
-                    <h2 style={{ color: 'var(--color-secondary)' }}>✨ Recommended For You</h2>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginTop: '15px' }}>
-                        {recommendations.map(event => (
-                            <div key={event._id} style={{ padding: '15px', background: 'white', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-                                <h5 style={{fontSize: '16px', fontWeight: 600}}>{event.title}</h5>
-                                <p style={{fontSize: '14px', color: 'var(--color-text-light)'}}>By: {event.ngo?.ngoName || 'N/A'}</p>
-                                <Link to={`/events/${event._id}`} style={{color: 'var(--color-primary)', fontSize: '14px'}}>View Details &rarr;</Link>
-                            </div>
-                        ))}
+        <div className="min-h-screen bg-gray-50 py-8">
+            <div className="container mx-auto px-4 max-w-6xl">
+                {/* Header */}
+                <h1 className="text-3xl lg:text-4xl font-extrabold text-indigo-700">
+                    Volunteer Dashboard
+                </h1>
+                <p className="text-lg text-gray-600 mb-8">
+                    Welcome, <span className="font-semibold text-gray-800">{displayName}</span>!
+                </p> 
+                
+                {/* Metrics Card: Your Impact */}
+                <div className="bg-white border-l-4 border-indigo-500 p-6 rounded-xl shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-8">
+                    <div>
+                        <h2 className="text-xl font-bold text-gray-900 mb-2">Your Impact</h2>
+                        <p className="text-3xl font-extrabold text-indigo-600">
+                            {metrics.volunteerPoints || 0} Points
+                        </p>
+                        <p className="text-base text-gray-600 mt-1">
+                            Events Attended: <span className="font-semibold">{metrics.totalEventsAttended || 0}</span>
+                        </p>
                     </div>
+                    
+                    {/* Placeholder for badges/achievements if needed */}
+                    <Link 
+                        to="/settings" 
+                        className="text-sm font-medium text-orange-600 hover:text-orange-700 transition duration-150 inline-flex items-center"
+                    >
+                        Edit Profile Settings
+                        <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                    </Link>
                 </div>
-            )}
-            
-            {/* Upcoming Events */}
-            <div style={{ marginBottom: '2rem' }}>
-                <h2 style={{ color: 'var(--color-text)' }}>Upcoming Events ({upcoming.length})</h2>
-                {upcoming.length === 0 ? (
-                    <p style={{padding: '15px', background: 'white', borderRadius: '8px', borderLeft: '3px solid #ddd'}}>You have no upcoming events. <Link to="/" style={{color: 'var(--color-secondary)'}}>Browse Events</Link></p>
-                ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginTop: '15px' }}>
-                        {upcoming.map(reg => (
-                            // FIX: Use optional chaining on nested properties from populated fields
-                            <div key={reg._id} style={{ backgroundColor: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-                                <h3>{reg.event?.title || 'Unknown Event'}</h3>
-                                <p>Date: {new Date(reg.event?.date).toLocaleDateString()}</p>
-                                <p style={{fontSize: '14px', color: 'var(--color-text-light)'}}>Status: {reg.status}</p>
-                                <button onClick={() => handleCancel(reg._id)} style={{marginTop: '10px', padding: '8px 15px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer'}}>
-                                    Cancel Registration
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            {/* Participation History */}
-            <div>
-                <h2 style={{ color: 'var(--color-text)' }}>Participation History ({history.length})</h2>
-                 {history.length === 0 ? (
-                    <p style={{padding: '15px', background: 'white', borderRadius: '8px', borderLeft: '3px solid #ddd'}}>No attended events yet.</p>
-                ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginTop: '15px' }}>
-                        {history.map(reg => (
-                            <div key={reg._id} style={{ backgroundColor: 'white', padding: '20px', borderRadius: '10px', borderLeft: '3px solid var(--color-success)' }}>
-                                <h3>{reg.event?.title || 'Unknown Event'}</h3>
-                                <p>Date: {new Date(reg.event?.date).toLocaleDateString()}</p>
-                                <p style={{color: 'var(--color-success)', fontWeight: 'bold'}}>Status: Attended</p>
-                                {/* UPDATED BUTTON for authenticated download */}
-                                {reg.status === 'Attended' && (
-                                    <button 
-                                        // Pass event title for cleaner filename
-                                        onClick={() => handleDownloadCertificate(reg._id, reg.event?.title)} 
-                                        style={{
-                                            marginTop: '10px', 
-                                            padding: '8px 15px', 
-                                            backgroundColor: 'var(--color-primary)', 
-                                            color: 'white', 
-                                            border: 'none', 
-                                            borderRadius: '4px', 
-                                            cursor: 'pointer'
-                                        }}
+                
+                {/* Recommendations Section */}
+                {recommendations.length > 0 && (
+                    <div className="bg-yellow-50 p-6 rounded-xl border-l-4 border-yellow-500 shadow-md mb-8">
+                        <h2 className="text-xl font-bold text-yellow-800 mb-4">✨ Recommended For You</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {recommendations.map(event => (
+                                <div key={event._id} className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-150 border border-gray-100">
+                                    <h5 className="text-base font-semibold text-gray-800 line-clamp-1">{event.title}</h5>
+                                    <p className="text-xs text-gray-500 mt-1 mb-3">By: {event.ngo?.ngoName || 'N/A'}</p>
+                                    <Link 
+                                        to={`/events/${event._id}`} 
+                                        className="text-sm font-medium text-indigo-600 hover:text-indigo-800 inline-flex items-center"
                                     >
-                                        Download Certificate 📜
-                                    </button>
-                                )}
-                                {/* END UPDATED BUTTON */}
-                            </div>
-                        ))}
+                                        View Details &rarr;
+                                    </Link>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 )}
+                
+                {/* Upcoming Events */}
+                <div className="mb-8">
+                    <h2 className="text-2xl font-bold text-gray-800 mb-4">Upcoming Events ({upcoming.length})</h2>
+                    {upcoming.length === 0 ? (
+                        <div className="p-4 bg-white rounded-lg border-l-4 border-gray-300 shadow-sm">
+                            <p className="text-gray-600">You have no upcoming events. 
+                                <Link to="/events" className="text-indigo-600 hover:text-indigo-800 ml-1 font-medium">Browse Events</Link>
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            {upcoming.map(reg => (
+                                <div key={reg._id} className="bg-white p-4 border-l-4 border-indigo-500 rounded-lg shadow-md flex justify-between items-center space-x-4">
+                                    <div className="flex-grow">
+                                        <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">{reg.event?.title || 'Unknown Event'}</h3>
+                                        <p className="text-sm text-gray-600">
+                                            Date: {new Date(reg.event?.date).toLocaleDateString()}
+                                        </p>
+                                        <p className="text-sm text-gray-500 font-medium mt-1">Status: <span className="text-indigo-600">{reg.status}</span></p>
+                                    </div>
+                                    <button 
+                                        onClick={() => handleCancel(reg._id)} 
+                                        className="flex-shrink-0 py-2 px-3 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition duration-150"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* Participation History */}
+                <div>
+                    <h2 className="text-2xl font-bold text-gray-800 mb-4">Participation History ({history.length})</h2>
+                    {history.length === 0 ? (
+                        <div className="p-4 bg-white rounded-lg border-l-4 border-gray-300 shadow-sm">
+                            <p className="text-gray-600">No attended events yet.</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            {history.map(reg => (
+                                <div key={reg._id} className="bg-white p-4 border-l-4 border-green-500 rounded-lg shadow-md flex justify-between items-center space-x-4">
+                                    <div className="flex-grow">
+                                        <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">{reg.event?.title || 'Unknown Event'}</h3>
+                                        <p className="text-sm text-gray-600">
+                                            Date: {new Date(reg.event?.date).toLocaleDateString()}
+                                        </p>
+                                        <p className="text-sm font-bold text-green-600 mt-1">Status: Attended</p>
+                                    </div>
+                                    
+                                    {/* Download Button */}
+                                    {reg.status === 'Attended' && (
+                                        <button 
+                                            onClick={() => handleDownloadCertificate(reg._id, reg.event?.title)} 
+                                            className="flex-shrink-0 inline-flex items-center py-2 px-3 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition duration-150"
+                                        >
+                                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                            Certificate
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

@@ -141,7 +141,6 @@ router.get('/certificate/:regId/download', async (req, res) => {
 
         emailService.generateCertificatePDF(doc, volunteer, event, ngoName, registration._id);
 
-        doc.end();
 
     } catch (err) {
         console.error('Certificate download streaming error:', err.message);

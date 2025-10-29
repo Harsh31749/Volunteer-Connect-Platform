@@ -92,7 +92,6 @@ export const AuthProvider = ({ children }) => {
         if (token) {
             (async () => {
                 try {
-                    // Set token first to enable authenticated requests
                     setAuthHeaders(token); 
                     const decodedToken = decodeToken(token);
 

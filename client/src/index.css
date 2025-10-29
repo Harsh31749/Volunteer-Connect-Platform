@@ -1,5 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom font import */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap');
 
+/* CSS Variables for custom color scheme (used in Tailwind config extension) */
 :root {
     --color-primary: #007bff;
     --color-secondary: #FF6B00;
@@ -23,6 +29,7 @@ html, body {
     overflow-x: hidden;
 }
 
+/* Base body styles */
 body {
     font-family: 'Poppins', sans-serif;
     background-color: var(--color-background);
@@ -36,29 +43,5 @@ a {
     transition: color 0.2s;
 }
 
-.btn-vibrant {
-    background: linear-gradient(90deg, var(--color-secondary), #ff9900);
-    color: white;
-    font-weight: 700;
-    padding: 12px 25px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 10px rgba(255, 107, 0, 0.4);
-}
-
-.btn-vibrant:hover {
-    background: linear-gradient(90deg, #ff9900, var(--color-secondary));
-    box-shadow: 0 6px 15px rgba(255, 107, 0, 0.6);
-    transform: translateY(-2px);
-}
-
-.container-fluid {
-    width: 100%;
-    padding-right: 15px;
-    padding-left: 15px;
-    margin-right: auto;
-    margin-left: auto;
-    max-width: 1200px;
-}
+/* Custom utility definitions (like .btn-vibrant or .container-fluid) should be removed 
+   as they were replaced by Tailwind classes in your React components. */

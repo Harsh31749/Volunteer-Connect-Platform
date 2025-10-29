@@ -20,6 +20,7 @@ const CertificateVerifier = () => {
         }
 
         try {
+            // API call remains untouched
             const res = await axios.get(`/api/events/verify-certificate/${regId}`);
             setResult(res.data);
         } catch (err) {
@@ -29,6 +30,11 @@ const CertificateVerifier = () => {
             setLoading(false);
         }
     };
+
+    const inputStyle = 
+      "w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 " +
+      "placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 " +
+      "focus:border-indigo-500 transition duration-150 ease-in-out shadow-sm";
 
     const renderResult = () => {
         if (!result) return null;
@@ -41,48 +47,69 @@ const CertificateVerifier = () => {
 
         if (result.isValid) {
             return (
-                <div style={{ padding: '20px', backgroundColor: 'var(--color-success)', color: 'white', borderRadius: '8px', marginTop: '25px', boxShadow: '0 4px 10px rgba(40, 167, 69, 0.5)' }}>
-                    <h4 style={{marginBottom: '10px', fontSize: '1.5rem'}}>✅ Verification Successful</h4>
-                    <p style={{marginBottom: '15px'}}>This certificate is **VALID** and was issued by the Volunteer Connect Platform.</p>
-                    <ul style={{listStyle: 'none', padding: 0}}>
-                        <li><strong>Volunteer:</strong> {volunteerName}</li>
-                        <li><strong>Event:</strong> {eventTitle}</li>
-                        <li><strong>Date:</strong> {eventDate}</li>
-                        <li><strong>Organization:</strong> {organizedBy}</li>
+                <div className="p-6 bg-green-50 border-l-4 border-green-500 text-green-800 rounded-lg shadow-lg mt-6">
+                    <div className="flex items-center mb-2">
+                        {/* SVG replacement for checkmark icon */}
+                        <svg className="h-6 w-6 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path></svg>
+                        <h4 className="font-bold text-xl">Verification Successful</h4>
+                    </div>
+                    <p className="mb-4 text-green-700">This certificate is **VALID** and was issued by the Volunteer Connect Platform.</p>
+                    <ul className="list-none p-0 text-sm space-y-1">
+                        <li><strong>Volunteer:</strong> <span className="font-medium">{volunteerName}</span></li>
+                        <li><strong>Event:</strong> <span className="font-medium">{eventTitle}</span></li>
+                        <li><strong>Date:</strong> <span className="font-medium">{eventDate}</span></li>
+                        <li><strong>Organization:</strong> <span className="font-medium">{organizedBy}</span></li>
                     </ul>
                 </div>
             );
         } else {
             return (
-                <div style={{ padding: '20px', backgroundColor: '#dc3545', color: 'white', borderRadius: '8px', marginTop: '25px' }}>
-                    <h4 style={{marginBottom: '10px', fontSize: '1.5rem'}}>⚠️ Verification Failed</h4>
-                    <p>{result.msg}</p>
-                    {/* Access error message properties defensively */}
-                    {result.details?.registrationStatus && <p>Status on Record: <strong>{result.details.registrationStatus}</strong></p>}
+                <div className="p-6 bg-red-50 border-l-4 border-red-500 text-red-800 rounded-lg shadow-lg mt-6">
+                    <div className="flex items-center mb-2">
+                        {/* SVG replacement for warning icon */}
+                        <svg className="h-6 w-6 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"></path></svg>
+                        <h4 className="font-bold text-xl">Verification Failed</h4>
+                    </div>
+                    <p className="text-red-700 mb-2">{result.msg}</p>
+                    {result.details?.registrationStatus && <p className="text-sm text-red-700">Status on Record: <strong>{result.details.registrationStatus}</strong></p>}
                 </div>
             );
         }
     };
 
     return (
-        <div style={{ background: 'var(--color-background)', minHeight: '100vh', paddingTop: '5rem', display: 'flex', justifyContent: 'center' }}>
-            <div className="container" style={{maxWidth: '650px', width: '100%'}}> 
-                <Link to="/" style={{color: 'var(--color-text-light)', marginBottom: '30px', display: 'block', fontSize: '14px'}}>
-                    <i className="fas fa-arrow-left" style={{marginRight: '8px'}}></i> Back to Homepage
+        <div className="min-h-screen bg-gray-100 flex justify-center items-start py-12 px-4 sm:px-6 lg:px-8">
+            <div className="w-full max-w-2xl"> 
+                
+                {/* Back Link */}
+                <Link 
+                    to="/" 
+                    className="flex items-center mb-6 text-gray-500 hover:text-indigo-600 transition duration-150 font-medium"
+                >
+                    {/* SVG replacement for fas fa-arrow-left */}
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    Back to Homepage
                 </Link>
 
-                <div style={{backgroundColor: 'var(--color-card-bg)', padding: '40px', borderRadius: '12px', boxShadow: '0 10px 30px var(--color-shadow)'}}>
-                    <h1 style={{ color: 'var(--color-primary)', fontSize: '2rem', marginBottom: '0.5rem' }}>Certificate Verification Portal</h1>
-                    <p style={{ color: 'var(--color-text-light)', fontSize: '1.1rem', marginBottom: '1.5rem' }}>
+                {/* Main Card */}
+                <div className="bg-white p-8 rounded-xl shadow-2xl border-t-4 border-indigo-500">
+                    <h1 className="text-3xl font-extrabold text-gray-900 mb-2">
+                        Certificate Verification Portal
+                    </h1>
+                    <p className="text-lg text-gray-600 mb-6">
                         Enter the unique ID found on the digital certificate to confirm its authenticity.
                     </p>
 
-                    <form onSubmit={handleSubmit}>
-                        <div style={{marginBottom: '20px'}}>
-                            <label style={{display: 'block', marginBottom: '8px', fontWeight: 600}}>Verification ID:</label>
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        {/* Verification ID Input */}
+                        <div>
+                            <label htmlFor="regId" className="block text-sm font-medium text-gray-700 mb-2">
+                                Verification ID:
+                            </label>
                             <input
+                                id="regId"
                                 type="text"
-                                style={{width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: 'var(--color-input-bg)'}}
+                                className={inputStyle}
                                 placeholder="Paste the unique Registration ID here..."
                                 value={regId}
                                 onChange={(e) => setRegId(e.target.value)}
@@ -90,18 +117,34 @@ const CertificateVerifier = () => {
                             />
                         </div>
                         
-                        {error && <div style={{color: 'white', backgroundColor: '#dc3545', padding: '10px', borderRadius: '4px', marginBottom: '15px'}}>{error}</div>}
+                        {/* Error Message Display */}
+                        {error && (
+                            <div className="rounded-md bg-red-100 p-3 border-l-4 border-red-500 text-red-700 font-medium">
+                                {error}
+                            </div>
+                        )}
 
+                        {/* Submit Button */}
                         <button 
                             type="submit" 
-                            className="btn-vibrant" 
-                            style={{ width: '100%', fontWeight: 'bold' }}
+                            className="w-full flex justify-center py-3 px-4 border border-transparent 
+                                       rounded-lg shadow-lg text-base font-semibold text-white bg-indigo-600 
+                                       hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 
+                                       focus:ring-indigo-500 transition duration-150 ease-in-out disabled:bg-indigo-400"
                             disabled={loading}
                         >
-                            {loading ? 'Verifying...' : 'Verify Certificate'}
+                            {loading ? (
+                                <span className="flex items-center">
+                                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                    Verifying...
+                                </span>
+                            ) : (
+                                'Verify Certificate'
+                            )}
                         </button>
                     </form>
                     
+                    {/* Verification Result Area */}
                     {renderResult()}
                 </div>
             </div>
