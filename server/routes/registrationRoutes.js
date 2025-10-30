@@ -44,7 +44,8 @@ router.post('/:eventId', auth, async (req, res) => {
 
     } catch (err) {
         if (err.code === 11000) return res.status(400).json({ msg: 'You are already registered.' });
-        console.error('Registration error:', err.message);
+        console.warn('Registration error:', err.message);
+
         res.status(500).json({ msg: 'Server Error during registration.', error: err.message });
     }
 });
@@ -91,6 +92,7 @@ router.put('/:regId/verify', auth, async (req, res) => {
 
     } catch (err) { 
         console.error('Certificate verification error:', err.message);
+
         res.status(500).json({ msg: 'Server Error during verification/certificate sending.', error: err.message }); 
     }
 });
@@ -112,6 +114,7 @@ router.put('/:regId/cancel', auth, async (req, res) => {
 
     } catch (err) { 
         console.error('Cancellation error:', err.message);
+
         res.status(500).json({ msg: 'Server Error during cancellation.', error: err.message });
     }
 });

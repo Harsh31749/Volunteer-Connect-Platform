@@ -68,13 +68,14 @@ passport.deserializeUser(async (id, done) => {
 });
 
 app.use(express.json());
-
+app.use(express.static('public'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/events', require('./routes/eventRoutes'));
 app.use('/api/registrations', require('./routes/registrationRoutes'));
 app.use('/api/volunteers', require('./routes/volunteerRoutes'));
 app.use('/api/ngo', require('./routes/ngoRoutes'));
 app.use('/api/volunteers', require('./routes/volunteerRoutes'));
+app.use(express.static(path.join('public')));
 
 if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development') { 
     

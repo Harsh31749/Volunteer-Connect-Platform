@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 const VolunteerDashboard = () => {
     const { user } = useAuth();
@@ -38,6 +39,8 @@ const VolunteerDashboard = () => {
 
         } catch (err) {
             console.error('Failed to fetch dashboard data:', err);
+            toast.error('Failed to fetch dashboard data:', err);
+
         } finally {
             setLoading(false);
         }
@@ -47,10 +50,10 @@ const VolunteerDashboard = () => {
         if (window.confirm('Are you sure you want to cancel your registration? This action cannot be undone.')) {
             try {
                 await axios.put(`/api/registrations/${regId}/cancel`);
-                alert('Registration successfully cancelled.');
+                toast.success('Registration successfully cancelled.');
                 fetchDashboardData(); 
             } catch (err) {
-                alert(err.response?.data?.msg || 'Failed to cancel registration.');
+                toast.error(err.response?.data?.msg || 'Failed to cancel registration.');
             }
         }
     };
@@ -73,24 +76,25 @@ const VolunteerDashboard = () => {
             
             link.remove();
             window.URL.revokeObjectURL(url);
-            alert('Certificate download successful!');
+            toast.success('Certificate download successful!');
 
         } catch (err) {
             console.error('Certificate download failed:', err);
+            toast.error('Certificate download failed:', err);
             
             if (err.response && err.response.data instanceof Blob) {
                 const reader = new FileReader();
                 reader.onload = function() {
                     try {
                         const errorJson = JSON.parse(reader.result);
-                        alert(errorJson.msg || 'Failed to download certificate.');
+                        toast.error(errorJson.msg || 'Failed to download certificate.');
                     } catch (e) {
-                         alert('Failed to download certificate. Check server response.');
+                         toast.error('Failed to download certificate. Check server response.');
                     }
                 };
                 reader.readAsText(err.response.data);
             } else {
-                alert(err.response?.data?.msg || 'Failed to download certificate. Please check server status.');
+                toast.error(err.response?.data?.msg || 'Failed to download certificate. Please check server status.');
             }
         }
     };
@@ -113,21 +117,20 @@ const VolunteerDashboard = () => {
                 </p> 
                 
                 {/* Metrics Card: Your Impact */}
-                <div className="bg-white border-l-4 border-indigo-500 p-6 rounded-xl shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-8">
+                <div className="bg-teal-500/30 border-l-4 border-indigo-500 p-6 rounded-xl shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-8">
                     <div>
                         <h2 className="text-xl font-bold text-gray-900 mb-2">Your Impact</h2>
-                        <p className="text-3xl font-extrabold text-indigo-600">
-                            {metrics.volunteerPoints || 0} Points
+                        <p className="text-2xl font-extrabold text-indigo-600">
+                            Events Attended: <span className="font-extrabold">{metrics.totalEventsAttended || 0}</span>
                         </p>
-                        <p className="text-base text-gray-600 mt-1">
-                            Events Attended: <span className="font-semibold">{metrics.totalEventsAttended || 0}</span>
-                        </p>
+                        
+                        
                     </div>
                     
                     {/* Placeholder for badges/achievements if needed */}
                     <Link 
                         to="/settings" 
-                        className="text-sm font-medium text-orange-600 hover:text-orange-700 transition duration-150 inline-flex items-center"
+                        className="text-sm font-medium text-red-700/80 hover:text-red-900/80 transition duration-150 inline-flex items-center"
                     >
                         Edit Profile Settings
                         <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
@@ -140,7 +143,7 @@ const VolunteerDashboard = () => {
                         <h2 className="text-xl font-bold text-yellow-800 mb-4">✨ Recommended For You</h2>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {recommendations.map(event => (
-                                <div key={event._id} className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-150 border border-gray-100">
+                                <div key={event._id} className="bg-lime-400/30 p-4 rounded-lg shadow-sm hover:shadow-md transition duration-150 border border-gray-100">
                                     <h5 className="text-base font-semibold text-gray-800 line-clamp-1">{event.title}</h5>
                                     <p className="text-xs text-gray-500 mt-1 mb-3">By: {event.ngo?.ngoName || 'N/A'}</p>
                                     <Link 
@@ -159,7 +162,7 @@ const VolunteerDashboard = () => {
                 <div className="mb-8">
                     <h2 className="text-2xl font-bold text-gray-800 mb-4">Upcoming Events ({upcoming.length})</h2>
                     {upcoming.length === 0 ? (
-                        <div className="p-4 bg-white rounded-lg border-l-4 border-gray-300 shadow-sm">
+                        <div className="p-4 bg-amber-400 rounded-lg border-l-4 border-gray-300 shadow-sm">
                             <p className="text-gray-600">You have no upcoming events. 
                                 <Link to="/events" className="text-indigo-600 hover:text-indigo-800 ml-1 font-medium">Browse Events</Link>
                             </p>
@@ -197,7 +200,7 @@ const VolunteerDashboard = () => {
                     ) : (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             {history.map(reg => (
-                                <div key={reg._id} className="bg-white p-4 border-l-4 border-green-500 rounded-lg shadow-md flex justify-between items-center space-x-4">
+                                <div key={reg._id} className="bg-emerald-400/50 p-4 border-l-4 border-green-500 rounded-lg shadow-md flex justify-between items-center space-x-4">
                                     <div className="flex-grow">
                                         <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">{reg.event?.title || 'Unknown Event'}</h3>
                                         <p className="text-sm text-gray-600">

@@ -154,6 +154,7 @@ const sendCertificateEmail = async (volunteer, event, certificateBuffer, ngoName
 
     const info = await transporter.sendMail(mailOptions);
     console.log('Certificate email sent:', info.messageId);
+
 };
 
 module.exports = {

@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const AuthContext = createContext();
 
@@ -57,8 +58,10 @@ export const AuthProvider = ({ children }) => {
             setUser(res.data);
             return res.data; // Return full user object
         } catch (err) {
+     
             console.error('Failed to load user profile.', err.message);
-            logout();
+            toast.error('Failed to load user profile.', err.message);
+           logout();
             return null;
         }
     };

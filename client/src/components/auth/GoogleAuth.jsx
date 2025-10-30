@@ -3,6 +3,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 const GoogleAuth = () => {
     const { authenticateGoogleUser } = useAuth();
@@ -12,7 +13,7 @@ const GoogleAuth = () => {
         const idToken = credentialResponse.credential;
 
         if (!idToken) {
-            alert('Social login failed: Token not found in response.');
+           toast.error('Social login failed: Token not found in response.');
             return;
         }
 
@@ -30,7 +31,7 @@ const GoogleAuth = () => {
             }
         } catch (error) {
             const msg = error.response?.data?.msg || 'Login failed. Please check your credentials or try again.';
-            alert(msg);
+            toast.error(msg);
         }
     };
 
@@ -38,7 +39,7 @@ const GoogleAuth = () => {
         <GoogleLogin
             onSuccess={handleSuccess}
             onError={() => {
-                alert('Google Login Failed: There was an error with the login process.');
+                toast.error('Google Login Failed: There was an error with the login process.');
             }}
         />
     );

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext'; 
+import toast from 'react-hot-toast';
 
 const SocialLoginSuccess = () => {
     const { authenticateGoogleUser, user } = useAuth();
@@ -27,6 +28,7 @@ const SocialLoginSuccess = () => {
                 })
                 .catch(err => {
                     console.error('Social Login Error:', err);
+                    toast.error('Social Login Error:', err);
                     setStatus('Authentication failed. Redirecting to login...');
                     navigate('/login');
                 });

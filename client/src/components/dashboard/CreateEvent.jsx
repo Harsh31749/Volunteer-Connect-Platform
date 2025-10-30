@@ -48,9 +48,9 @@ const CreateEvent = ({ onEventCreated, onBack }) => {
       "placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 " +
       "focus:border-indigo-500 transition duration-150 ease-in-out shadow-sm bg-white";
       
-    const labelStyle = "block mb-2 text-sm font-medium text-gray-700";
+    const labelStyle = "block mb-2 text-md font-medium text-black-900";
 
-return (
+    return (
         <div className="container mx-auto px-4 py-8 max-w-4xl">
             
             {/* Back Button */}
@@ -71,10 +71,15 @@ return (
                 Digitize your event listing for volunteers.
             </p>
 
-            {/* Form Container (Modernized Card) */}
+            {/* Form Container (Modernized Card with Background Image) */}
             <form 
                 onSubmit={onSubmit} 
                 className="bg-white p-6 md:p-8 lg:p-10 shadow-2xl rounded-xl space-y-6"
+                style={{
+                    backgroundImage: `url('/image/ngo.png')`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center center'
+                }}
             >
                 
                 {/* Title */}
@@ -170,7 +175,7 @@ return (
                         ))}
                     </select>
                 </div>
-                
+
                 {/* Success Message Display */}
                 {success && (
                     <div className="rounded-lg bg-green-50 p-4 border border-green-200">
