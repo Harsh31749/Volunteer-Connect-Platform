@@ -113,7 +113,7 @@ export const AuthProvider = ({ children }) => {
         } else {
             setLoading(false);
         }
-    }, []);
+    }, );
 
     // FIX: Added try/catch to correctly propagate the server's error message
     const login = async (email, password) => {
