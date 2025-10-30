@@ -25,7 +25,7 @@ const decodeToken = (token) => {
     } else {
         throw new Error('Base64 decoding environment not supported.');
     }
-    
+
     return JSON.parse(payload);
 };
 
@@ -58,10 +58,9 @@ export const AuthProvider = ({ children }) => {
             setUser(res.data);
             return res.data; // Return full user object
         } catch (err) {
-     
             console.error('Failed to load user profile.', err.message);
             toast.error('Failed to load user profile.', err.message);
-           logout();
+            logout();
             return null;
         }
     };
@@ -89,7 +88,6 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (token) {
@@ -113,7 +111,7 @@ export const AuthProvider = ({ children }) => {
         } else {
             setLoading(false);
         }
-    }, );
+    }, [loadUserProfile]); // Fix: Add `loadUserProfile` as a dependency
 
     // FIX: Added try/catch to correctly propagate the server's error message
     const login = async (email, password) => {
