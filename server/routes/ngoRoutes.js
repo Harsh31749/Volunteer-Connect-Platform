@@ -60,6 +60,7 @@ router.put('/events/:eventId', async (req, res) => {
         // FIX: Added handling for MongoDB's generic WriteConcernError, 
         // as well as explicit Mongoose validation errors.
         console.error('Event update error:', err.message);
+
         
         // Handle Mongoose Validation Error (e.g., failed required, bad enum value)
         if (err.name === 'ValidationError') {

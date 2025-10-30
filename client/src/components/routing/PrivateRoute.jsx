@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom'; // MODIFIED: Import useLocation
 import { useAuth } from '../../context/AuthContext';
+import toast from 'react-hot-toast';
 
 const PrivateRoute = ({ component: Component, allowedRoles, ...rest }) => {
     const { user, loading } = useAuth();
@@ -27,8 +28,8 @@ const PrivateRoute = ({ component: Component, allowedRoles, ...rest }) => {
         // This avoids the confusing "unauthorized loop" and provides a better user experience.
         const dashboardPath = user.role === 'ngo' ? '/dashboard/ngo' : '/dashboard/volunteer';
         console.warn(`Access denied for role '${user.role}' to path '${location.pathname}'. Redirecting to authorized dashboard.`);
+        toast.warn(`Access denied for role '${user.role}' to path '${location.pathname}'. Redirecting to authorized dashboard.`);
 
-        // Redirect to their correct, authorized dashboard
         return <Navigate to={dashboardPath} replace />; 
     }
     

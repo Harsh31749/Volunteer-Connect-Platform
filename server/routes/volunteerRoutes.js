@@ -28,6 +28,7 @@ router.get('/dashboard/upcoming', async (req, res) => {
 
     } catch (err) { 
         console.error('Upcoming events fetch error:', err.message);
+
         res.status(500).json({ msg: 'Server Error while fetching upcoming events.', error: err.message }); 
     }
 });
@@ -49,6 +50,7 @@ router.get('/dashboard/history', async (req, res) => {
 
     } catch (err) { 
         console.error('Volunteer history fetch error:', err.message);
+
         res.status(500).json({ msg: 'Server Error while fetching history.', error: err.message }); 
     }
 });
@@ -67,6 +69,7 @@ router.get('/metrics', async (req, res) => {
 
     } catch (err) { 
         console.error('Volunteer metrics error:', err.message);
+
         res.status(500).json({ msg: 'Server Error while fetching metrics.', error: err.message }); 
     }
 });
@@ -102,6 +105,7 @@ router.get('/recommendations', async (req, res) => {
 
     } catch (err) { 
         console.error('Recommendation error:', err.message);
+
         res.status(500).json({ msg: 'Server Error while fetching recommendations.', error: err.message }); 
     }
 });

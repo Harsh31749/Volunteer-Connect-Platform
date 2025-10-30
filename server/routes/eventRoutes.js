@@ -37,6 +37,8 @@ router.get('/', async (req, res) => {
         res.json(events);
     } catch (err) { 
         console.error('Event browsing error:', err.message);
+        toact.error('Event browsing error:', err.message);
+
         res.status(500).json({ msg: 'Server Error during event browsing.', error: err.message });
     }
 });
@@ -118,6 +120,7 @@ router.get('/verify-certificate/:regId', async (req, res) => {
         });
     } catch (err) { 
         console.error(`Certificate verification for ID ${req.params.regId} error:`, err.message);
+
         res.status(500).json({ msg: 'Server Error during certificate verification.', error: err.message });
     }
 });

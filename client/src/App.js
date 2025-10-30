@@ -1,7 +1,6 @@
 import React from 'react';
 import './index.css';
-// NOTE: Assuming global index.css now contains Tailwind directives, 
-// so no need to explicitly remove index.css if it's correctly set up.
+import { Toaster } from 'react-hot-toast';
 import { Route, Routes } from 'react-router-dom';
 import NavBar from './components/layout/NavBar';
 import PrivateRoute from './components/routing/PrivateRoute';
@@ -17,14 +16,13 @@ import SocialLoginSuccess from './components/auth/SocialLoginSuccess';
 
 
 function App() {
-    // The main container div now simply wraps the routes.
-    // Padding/margins are handled by the components themselves or 
-    // removed completely if not necessary due to sticky navbar.
-    // The previous CSS classes like 'fixed-navbar-offset' and 'container-fluid' are removed.
-
     return (
         <div className="bg-gray-50 min-h-screen">
             <NavBar />
+            
+            {/* Toaster provider — place at the top level so it works globally */}
+            <Toaster position="top-center" reverseOrder={false} />
+
             <main>
                 <Routes>
                     {/* Public Routes */}

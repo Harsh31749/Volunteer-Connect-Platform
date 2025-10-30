@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const ManageVolunteers = ({ eventId, onBack }) => {
     const [registrations, setRegistrations] = useState([]);
@@ -16,6 +17,7 @@ const ManageVolunteers = ({ eventId, onBack }) => {
             } catch (err) {
                 setError(err.response?.data?.msg || 'Failed to fetch registrations for this event.');
                 console.error('API Error:', err);
+                toast.error('API Error:', err);
             } finally {
                 setLoading(false);
             }
@@ -30,7 +32,7 @@ const ManageVolunteers = ({ eventId, onBack }) => {
         }
         try {
             await axios.put(`/api/registrations/${registrationId}/verify`);
-            alert('Attendance verified! Certificate email sent.');
+            toast.error('Attendance verified! Certificate email sent.');
             
             setRegistrations(regs => 
                 regs.map(reg => 
@@ -38,7 +40,7 @@ const ManageVolunteers = ({ eventId, onBack }) => {
                 )
             );
         } catch (err) {
-            alert(err.response?.data?.msg || 'Verification failed.');
+            toast.error(err.response?.data?.msg || 'Verification failed.');
         }
     };
 

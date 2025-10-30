@@ -43,6 +43,7 @@ router.post('/google-login', async (req, res) => {
 
     } catch (err) {
         console.error('Google Login processing error:', err.message);
+
         res.status(500).json({ msg: 'Server Error during Google login processing.', error: err.message });
     }
 });
@@ -72,6 +73,7 @@ router.post('/register', async (req, res) => {
 
     } catch (err) {
         console.error('Registration error:', err.message);
+
         res.status(500).json({ msg: 'Server Error during registration.', error: err.message });
     }
 });
@@ -102,6 +104,7 @@ router.post('/login', async (req, res) => {
 
     } catch (err) {
         console.error('Login error:', err.message);
+
         res.status(500).json({ msg: 'Server Error during login.', error: err.message });
     }
 });
@@ -120,6 +123,7 @@ router.get('/profile', auth, async (req, res) => {
         res.json(user);
     } catch (err) {
         console.error('Profile fetch error:', err.message);
+
         res.status(500).send('Server Error');
     }
 });

@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import ManageVolunteers from './ManageVolunteers'; 
 import CreateEvent from './CreateEvent'; 
+import toast from 'react-hot-toast';
 
 const NGODashboard = () => {
     const { user } = useAuth();
@@ -25,6 +26,7 @@ const NGODashboard = () => {
             setEvents(res.data);
         } catch (err) {
             console.error('Failed to fetch NGO events:', err);
+            toast.error('Failed to fetch NGO events:', err);
         } finally {
             setLoading(false);
         }
@@ -35,7 +37,6 @@ const NGODashboard = () => {
             Loading Host Panel...
         </div>
     );
-
 
     if (currentView === 'create') {
         return <CreateEvent onEventCreated={() => setCurrentView('list')} onBack={() => setCurrentView('list')} />;
@@ -71,12 +72,20 @@ const NGODashboard = () => {
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                     <span>List New Opportunity</span>
                 </button>
-                
-                <div className="bg-white p-6 md:p-8 shadow-2xl rounded-xl">
-                    <h2 className="text-2xl font-bold text-gray-800 border-b border-gray-200 pb-3 mb-4">
+
+                {/* Your Organized Events Section with Background Image */}
+                <div 
+                    className="p-6 md:p-8 shadow-2xl rounded-xl"
+                    style={{
+                        backgroundImage: "url('/image/organized.png')",  // Replace with your image path
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center center',
+                    }}
+                >
+                    <h2 className="text-2xl font-bold text-white border-b border-white pb-3 mb-4">
                         Your Organized Events ({events.length})
                     </h2>
-                    
+
                     {events.length === 0 ? (
                         <div className="text-center p-8 bg-gray-50 rounded-lg border border-dashed border-gray-300">
                             <p className="text-lg text-gray-500">
