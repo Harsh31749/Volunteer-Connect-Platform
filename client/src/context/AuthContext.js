@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     // Helper: Fetches the full user profile from the server using the active token
-    const loadUserProfile = async (token) => {
+    const loadUserProfile = useCallback(async (token) => {
         try {
             const res = await axios.get('/api/users/profile', {
                 headers: { 'x-auth-token': token }
@@ -63,8 +63,8 @@ export const AuthProvider = ({ children }) => {
             logout();
             return null;
         }
-    };
-
+    }, [setUser]);
+    
     // Core session setter and validation
     const setAuthSession = async (token, userData = null) => {
         const decodedToken = decodeToken(token);
