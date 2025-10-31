@@ -9,7 +9,7 @@ const emailService = require('../utils/emailService');
 
 const sendCertificate = (volunteer, event, ngoOrganizer, registrationId, ngoName) => {
     return new Promise(async (resolve, reject) => {
-        const doc = new PDFDocument({ size: 'A4', layout: 'landscape' }); 
+        const doc = new PDFDocument({ size: 'A4', layout: 'landscape' });
         const buffers = [];
 
         doc.on('data', buffers.push.bind(buffers));
@@ -17,7 +17,7 @@ const sendCertificate = (volunteer, event, ngoOrganizer, registrationId, ngoName
         doc.on('end', async () => {
             try {
                 const certificateBuffer = Buffer.concat(buffers);
-                await emailService.sendCertificateEmail(volunteer, event, certificateBuffer, ngoName); 
+                await emailService.sendCertificateEmail(volunteer, event, certificateBuffer, ngoName);
                 resolve();
             } catch (err) {
                 reject(err);
@@ -25,10 +25,11 @@ const sendCertificate = (volunteer, event, ngoOrganizer, registrationId, ngoName
         });
 
         emailService.generateCertificatePDF(doc, volunteer, event, ngoOrganizer.ngoName, registrationId);
-        
-        doc.end(); 
+
+        doc.end();
     });
 };
+
 
 router.post('/:eventId', auth, async (req, res) => {
     if (req.user.role !== 'volunteer') return res.status(403).json({ msg: 'Access denied.' });
