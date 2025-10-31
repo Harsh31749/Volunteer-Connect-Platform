@@ -32,7 +32,7 @@ const ManageVolunteers = ({ eventId, onBack }) => {
         }
         try {
             await axios.put(`/api/registrations/${registrationId}/verify`);
-            toast.error('Attendance verified! Certificate email sent.');
+            toast.success('Attendance verified! Certificate email sent.');
             
             setRegistrations(regs => 
                 regs.map(reg => 

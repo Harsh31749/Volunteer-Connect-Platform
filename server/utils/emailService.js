@@ -1,7 +1,6 @@
 const nodemailer = require('nodemailer');
 const fs = require('fs'); 
 const path = require('path');
-// Import PDFDocument here if it's not globally available, as it's needed for the doc object
 const PDFDocument = require('pdfkit'); 
 require('dotenv').config();
 
@@ -16,7 +15,11 @@ const transporter = nodemailer.createTransport({
 /**
  * Generates the single-page, centered PDF certificate.
  */
-const generateCertificatePDF = (doc, volunteer, event, ngoName, registrationId) => {
+const generateCertificatePDF = (volunteer, event, ngoName, registrationId) => {
+    const doc = new PDFDocument({ size: 'A4', margin: 50 });
+    const stream = fs.createWriteStream(path.join(__dirname, 'certificate.pdf'));
+    doc.pipe(stream); // Save the generated PDF to a file
+
     doc.info.Title = 'Volunteer Certificate of Attendance';
     doc.info.Author = ngoName;
 
@@ -27,26 +30,24 @@ const generateCertificatePDF = (doc, volunteer, event, ngoName, registrationId) 
     const LIGHT_TEXT = '#555';
     const LIGHT_BG = '#f4f7f9';
 
-    const page = doc.page;
-    const margins = page.margins;
-    
-    // Line 34 in my previous corrected version:
-    // This line is now safely declared with 'const'
-    const USABLE_WIDTH = page.width - margins.left - margins.right; 
+    const margins = doc.page.margins;
+    const pageWidth = doc.page.width;
+    const pageHeight = doc.page.height;
+    const usableWidth = pageWidth - margins.left - margins.right; 
     const MARGIN_LEFT = margins.left;
     
     let currentY = 120; // Initial Y position for the header
 
     // 1. Draw Background and Border
-    doc.rect(0, 0, page.width, page.height).fill(LIGHT_BG); 
+    doc.rect(0, 0, pageWidth, pageHeight).fill(LIGHT_BG); 
     
     // Stylish border
-    doc.rect(margins.left / 2, margins.top / 2, page.width - margins.left, page.height - margins.top)
+    doc.rect(margins.left / 2, margins.top / 2, pageWidth - margins.left, pageHeight - margins.top)
        .lineWidth(10)
        .stroke(SECONDARY_COLOR);
 
     // Inner background
-    doc.rect(margins.left, margins.top, USABLE_WIDTH, page.height - margins.top - margins.bottom)
+    doc.rect(margins.left, margins.top, usableWidth, pageHeight - margins.top - margins.bottom)
        .fillAndStroke('#ffffff', '#ffffff');
 
     // 2. Certificate Title
@@ -55,7 +56,7 @@ const generateCertificatePDF = (doc, volunteer, event, ngoName, registrationId) 
        .fillColor(PRIMARY_COLOR)
        .text('Certificate of Appreciation', MARGIN_LEFT, currentY, { 
            align: 'center', 
-           width: USABLE_WIDTH
+           width: usableWidth
        });
 
     currentY = doc.y + 20;
@@ -66,7 +67,7 @@ const generateCertificatePDF = (doc, volunteer, event, ngoName, registrationId) 
        .fillColor(DARK_TEXT)
        .text('Proudly Presented to', MARGIN_LEFT, currentY, { 
            align: 'center', 
-           width: USABLE_WIDTH 
+           width: usableWidth 
        });
 
     // 4. Volunteer Name (Most Prominent)
@@ -77,7 +78,7 @@ const generateCertificatePDF = (doc, volunteer, event, ngoName, registrationId) 
        .text(volunteer.name, MARGIN_LEFT, currentY, { 
            align: 'center',
            underline: true,
-           width: USABLE_WIDTH 
+           width: usableWidth 
        });
     
     // 5. Contribution Description
@@ -87,7 +88,7 @@ const generateCertificatePDF = (doc, volunteer, event, ngoName, registrationId) 
        .fillColor(LIGHT_TEXT)
        .text(`For their valuable contribution and successful participation in:`, MARGIN_LEFT, currentY, { 
            align: 'center', 
-           width: USABLE_WIDTH 
+           width: usableWidth 
        });
 
     // 6. Event Title (Bold and Clear)
@@ -97,7 +98,7 @@ const generateCertificatePDF = (doc, volunteer, event, ngoName, registrationId) 
        .fillColor(PRIMARY_COLOR) 
        .text(event.title, MARGIN_LEFT, currentY, { 
            align: 'center', 
-           width: USABLE_WIDTH 
+           width: usableWidth 
        });
 
     // 7. Event Metadata
@@ -106,7 +107,7 @@ const generateCertificatePDF = (doc, volunteer, event, ngoName, registrationId) 
     doc.font('Helvetica')
        .fontSize(14)
        .fillColor(LIGHT_TEXT)
-       .text(`Held on: ${eventDate} in ${event.location}`, MARGIN_LEFT, currentY, { align: 'center', width: USABLE_WIDTH });
+       .text(`Held on: ${eventDate} in ${event.location}`, MARGIN_LEFT, currentY, { align: 'center', width: usableWidth });
 
     // 8. Organizer Info
     currentY = doc.y + 30;
@@ -115,23 +116,35 @@ const generateCertificatePDF = (doc, volunteer, event, ngoName, registrationId) 
        .fillColor(DARK_TEXT)
        .text(`Organized by: ${ngoName}`, MARGIN_LEFT, currentY, { 
            align: 'center', 
-           width: USABLE_WIDTH
+           width: usableWidth
        });
 
     // 10. Verification ID (CRITICAL FIX: Placed explicitly at the very bottom of Page 1)
+    currentY = doc.y + 50;
     doc.font('Helvetica')
        .fontSize(10)
        .fillColor(DARK_TEXT)
-       .text(`Verification ID: ${registrationId}`, MARGIN_LEFT, currentY = doc.y + 50 , { 
+       .text(`Verification ID: ${registrationId}`, MARGIN_LEFT, currentY, { 
            align: 'center',
-           width: USABLE_WIDTH
+           width: usableWidth
        });
     
-    doc.end();
+    doc.end();  // Finish the document stream
+    return stream;
 };
 
-const sendCertificateEmail = async (volunteer, event, certificateBuffer, ngoName) => {
-    // ... (This function remains unchanged)
+/**
+ * Sends an email with the generated certificate attached.
+ */
+const sendCertificateEmail = async (volunteer, event, certificateStream, ngoName) => {
+    // Convert stream to buffer
+    const certificateBuffer = await new Promise((resolve, reject) => {
+        const buffers = [];
+        certificateStream.on('data', (chunk) => buffers.push(chunk));
+        certificateStream.on('end', () => resolve(Buffer.concat(buffers)));
+        certificateStream.on('error', reject);
+    });
+
     const mailOptions = {
         from: `"${process.env.APP_NAME || 'Volunteer Platform'}" <${process.env.EMAIL_USER}>`,
         to: volunteer.email,
@@ -142,7 +155,7 @@ const sendCertificateEmail = async (volunteer, event, certificateBuffer, ngoName
             <p>Your certificate is attached to this email. Thank you for your valuable contribution!</p>
             <p>You earned 5 volunteer points for this event!</p>
             <p>Best regards,</p>
-            <p>The ${ngoName || 'Organizer'} Team</p> `,
+            <p>The ${ngoName || 'Organizer'} Team</p>`,
         attachments: [
             {
                 filename: `Certificate_${event.title.replace(/\s/g, '_')}.pdf`,
@@ -152,9 +165,12 @@ const sendCertificateEmail = async (volunteer, event, certificateBuffer, ngoName
         ]
     };
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Certificate email sent:', info.messageId);
-
+    try {
+        const info = await transporter.sendMail(mailOptions);
+        console.log('Certificate email sent:', info.messageId);
+    } catch (error) {
+        console.error('Error sending email:', error);
+    }
 };
 
 module.exports = {
