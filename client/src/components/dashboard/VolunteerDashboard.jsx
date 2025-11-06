@@ -127,7 +127,6 @@ const VolunteerDashboard = () => {
                         
                     </div>
                     
-                    {/* Placeholder for badges/achievements if needed */}
                     <Link 
                         to="/settings" 
                         className="text-sm font-medium text-red-700/80 hover:text-red-900/80 transition duration-150 inline-flex items-center"
@@ -137,7 +136,6 @@ const VolunteerDashboard = () => {
                     </Link>
                 </div>
                 
-                {/* Recommendations Section */}
                 {recommendations.length > 0 && (
                     <div className="bg-yellow-50 p-6 rounded-xl border-l-4 border-yellow-500 shadow-md mb-8">
                         <h2 className="text-xl font-bold text-yellow-800 mb-4">✨ Recommended For You</h2>
@@ -163,7 +161,7 @@ const VolunteerDashboard = () => {
                     <h2 className="text-2xl font-bold text-gray-800 mb-4">Upcoming Events ({upcoming.length})</h2>
                     {upcoming.length === 0 ? (
                         <div className="p-4 bg-amber-400 rounded-lg border-l-4 border-gray-300 shadow-sm">
-                            <p className="text-gray-600">You have no upcoming events. 
+                            <p className="text-xl font-bold text-gray-600">You have no upcoming events. 
                                 <Link to="/events" className="text-indigo-600 hover:text-indigo-800 ml-1 font-medium">Browse Events</Link>
                             </p>
                         </div>
