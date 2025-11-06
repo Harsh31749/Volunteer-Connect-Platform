@@ -27,12 +27,12 @@ const ManageVolunteers = ({ eventId, onBack }) => {
     }, [eventId]); 
 
     const handleVerify = async (registrationId) => {
-        if (!window.confirm('Confirm attendance and trigger certificate email?')) {
+        if (!window.confirm('Confirm attendance ?')) {
             return;
         }
         try {
             await axios.put(`/api/registrations/${registrationId}/verify`);
-            toast.success('Attendance verified! Certificate email sent.');
+            toast.success('Attendance verified!');
             
             setRegistrations(regs => 
                 regs.map(reg => 

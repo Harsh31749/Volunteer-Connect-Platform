@@ -8,7 +8,7 @@ const User = require('./models/User');
 const jwt = require('jsonwebtoken');
 const userRoutes = require('./routes/userRoutes');
 const volunteerRoutes = require('./routes/volunteerRoutes');
-
+const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
@@ -28,6 +28,10 @@ app.use(session({
   secret: process.env.SESSION_SECRET, 
   resave: false,
   saveUninitialized: true,
+}));
+
+app.use(cors({
+    origin: ['https://11c2c4db-0063-45f4-bbf2-01be374e81f7-00-32bfzhvgecfyu.kirk.replit.dev/', 'https://five-hotels-wash.loca.lt'],  // Replace with your actual Replit URL and Localtunnel URL
 }));
 
 app.use(passport.initialize());
