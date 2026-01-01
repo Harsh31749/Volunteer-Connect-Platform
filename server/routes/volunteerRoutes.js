@@ -79,8 +79,10 @@ router.get('/recommendations', async (req, res) => {
         const attendedRegistrations = await Registration.find({ volunteer: req.user.id, status: 'Attended' })
             .populate('event', 'category');
 
-        const categoryCounts = {};
+        const allUserRegistrations = await Registration.find({ volunteer: req.user.id }).select('event');
+        const excludeEventIds = allUserRegistrations.map(reg => reg.event);
 
+        const categoryCounts = {};
         attendedRegistrations.forEach(reg => {
             if (reg.event && reg.event.category) {
                 const category = reg.event.category;
@@ -96,8 +98,9 @@ router.get('/recommendations', async (req, res) => {
                 category: { $in: topCategories },
                 date: { $gte: new Date() },
                 status: 'Open',
+                _id: { $nin: excludeEventIds }
             })
-            .limit(4) // Limit results for a cleaner recommendation feed
+            .limit(4) 
             .populate('ngo', 'ngoName');
         }
 
@@ -105,7 +108,6 @@ router.get('/recommendations', async (req, res) => {
 
     } catch (err) { 
         console.error('Recommendation error:', err.message);
-
         res.status(500).json({ msg: 'Server Error while fetching recommendations.', error: err.message }); 
     }
 });
@@ -129,28 +131,24 @@ router.get('/certificate/:regId/download', async (req, res) => {
 
         const event = registration.event;
         const volunteer = await User.findById(req.user.id);
-        const ngoOrganizer = await User.findById(event.ngo); // event.ngo is the ObjectId of the NGO user
+        const ngoOrganizer = await User.findById(event.ngo);
 
         if (!volunteer || !ngoOrganizer) {
-            return res.status(404).json({msg: 'Associated user record (volunteer or NGO) not found for certificate generation.' });
+            return res.status(404).json({msg: 'Associated user record (volunteer or NGO) not found.' });
         }
         
-        const ngoName = ngoOrganizer.ngoName || 'Unknown NGO'; // Safely access ngoName
+        const ngoName = ngoOrganizer.ngoName || 'Unknown NGO';
 
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename="certificate_${registration._id}.pdf"`);
 
-        const doc = new PDFDocument({ size: 'A4', layout: 'landscape' });
-        doc.pipe(res); // Pipe the PDF document stream directly to the response stream
-
-        emailService.generateCertificatePDF(doc, volunteer, event, ngoName, registration._id);
-
+        const pdfStream = emailService.generateCertificatePDF(volunteer, event, ngoName, registration._id);
+        pdfStream.pipe(res);
 
     } catch (err) {
         console.error('Certificate download streaming error:', err.message);
-
         if (!res.headersSent) {
-            return res.status(500).json({msg: 'Server Error during certificate download: A core component failed to generate the PDF.', error: err.message });
+            return res.status(500).json({msg: 'Server Error during certificate download.', error: err.message });
         }
     }
 });

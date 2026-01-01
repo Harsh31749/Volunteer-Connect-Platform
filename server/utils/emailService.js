@@ -11,20 +11,17 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-/**
- * Generates a PDF certificate in-memory and returns a stream.
- */
 const generateCertificatePDF = (volunteer, event, ngoName, registrationId) => {
     const volunteerName = volunteer.name;
     const eventTitle = event.title;
     const eventDate = new Date(event.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     const eventLocation = event.location;
-    const ngoTitle = ngoName.title;
+    const ngoTitle = (typeof ngoName === 'object' && ngoName.title) ? ngoName.title : ngoName;
 
-    const doc = new PDFDocument({ size: 'A4', margin: 50 });
-    const pdfStream = new stream.PassThrough(); // Create a stream for PDF
+    const doc = new PDFDocument({ size: 'A4', layout: 'landscape', margin: 50 });
+    const pdfStream = new stream.PassThrough(); 
 
-    doc.pipe(pdfStream); // Pipe the PDF document to the stream
+    doc.pipe(pdfStream);
 
     doc.info.Title = 'Volunteer Certificate of Attendance';
     doc.info.Author = ngoTitle;
@@ -42,17 +39,14 @@ const generateCertificatePDF = (volunteer, event, ngoName, registrationId) => {
     const usableWidth = pageWidth - margins.left - margins.right;
     const MARGIN_LEFT = margins.left;
 
-    let currentY = 120; // Initial Y position for the header
+    // Adjusted Y position for Landscape (starting slightly higher usually works better)
+    let currentY = 100; 
 
     // 1. Draw Background and Border
     doc.rect(0, 0, pageWidth, pageHeight).fill(LIGHT_BG);
-
-    // Stylish border
     doc.rect(margins.left / 2, margins.top / 2, pageWidth - margins.left, pageHeight - margins.top)
        .lineWidth(10)
        .stroke(SECONDARY_COLOR);
-
-    // Inner background
     doc.rect(margins.left, margins.top, usableWidth, pageHeight - margins.top - margins.bottom)
        .fillAndStroke('#ffffff', '#ffffff');
 
@@ -76,7 +70,7 @@ const generateCertificatePDF = (volunteer, event, ngoName, registrationId) => {
            width: usableWidth 
        });
 
-    // 4. Volunteer Name (Most Prominent)
+    // 4. Volunteer Name
     currentY = doc.y + 10;
     doc.font('Times-Roman') 
        .fontSize(52) 
@@ -97,7 +91,7 @@ const generateCertificatePDF = (volunteer, event, ngoName, registrationId) => {
            width: usableWidth 
        });
 
-    // 6. Event Title (Bold and Clear)
+    // 6. Event Title
     currentY = doc.y + 10;
     doc.font('Helvetica-Bold')
        .fontSize(28)
@@ -125,7 +119,7 @@ const generateCertificatePDF = (volunteer, event, ngoName, registrationId) => {
            width: usableWidth
        });
 
-    currentY = doc.y + 50;
+    currentY = doc.y + 40; // Adjusted spacing for footer
     doc.font('Helvetica')
        .fontSize(10)
        .fillColor(DARK_TEXT)
@@ -134,52 +128,52 @@ const generateCertificatePDF = (volunteer, event, ngoName, registrationId) => {
            width: usableWidth
        });
 
-    doc.end(); // End the document and close the stream
-    return pdfStream; // Return the stream for the generated PDF
+    doc.end(); 
+    return pdfStream; 
 };
 
+const sendCertificateEmail = async (volunteer, event, certificateData, ngoName) => {
+    try {
+        let certificateBuffer;
 
-/**
- * Sends an email with the generated certificate attached.
- */
-// const sendCertificateEmail = async (volunteer, event, certificateStream, ngoName) => {
-//     try {
-//         // Convert stream to buffer
-//         const certificateBuffer = await new Promise((resolve, reject) => {
-//             const buffers = [];
-//             certificateStream.on('data', (chunk) => buffers.push(chunk));
-//             certificateStream.on('end', () => resolve(Buffer.concat(buffers)));
-//             certificateStream.on('error', (err) => reject(new Error('Stream error: ' + err.message)));
-//         });
+        if (Buffer.isBuffer(certificateData)) {
+            certificateBuffer = certificateData;
+        } else {
+            certificateBuffer = await new Promise((resolve, reject) => {
+                const buffers = [];
+                certificateData.on('data', (chunk) => buffers.push(chunk));
+                certificateData.on('end', () => resolve(Buffer.concat(buffers)));
+                certificateData.on('error', (err) => reject(new Error('Stream error: ' + err.message)));
+            });
+        }
 
-//         const mailOptions = {
-//             from: `"${process.env.APP_NAME || 'Volunteer Platform'}" <${process.env.EMAIL_USER}>`,
-//             to: volunteer.email,
-//             subject: `Your Certificate for Event: ${event.title}`,
-//             html: `
-//                 <p>Dear ${volunteer.name},</p>
-//                 <p>Congratulations! Your attendance for the event <strong>${event.title}</strong> has been verified.</p>
-//                 <p>Your certificate is attached to this email. Thank you for your valuable contribution!</p>
-//                 <p>You earned 5 volunteer points for this event!</p>
-//                 <p>Best regards,</p>
-//                 <p>The ${ngoName || 'Organizer'} Team</p>`,
-//             attachments: [
-//                 {
-//                     filename: `Certificate_${event.title.replace(/\s/g, '_')}.pdf`,
-//                     content: certificateBuffer, 
-//                     contentType: 'application/pdf'
-//                 }
-//             ]
-//         };
+        const mailOptions = {
+            from: `"${process.env.APP_NAME || 'Volunteer Platform'}" <${process.env.EMAIL_USER}>`,
+            to: volunteer.email,
+            subject: `Your Certificate for Event: ${event.title}`,
+            html: `
+                <p>Dear ${volunteer.name},</p>
+                <p>Congratulations! Your attendance for the event <strong>${event.title}</strong> has been verified.</p>
+                <p>Your certificate is attached to this email.</p>
+                <p>Best regards,</p>
+                <p>The ${ngoName || 'Organizer'} Team</p>`,
+            attachments: [
+                {
+                    filename: `Certificate_${event.title.replace(/\s/g, '_')}.pdf`,
+                    content: certificateBuffer, 
+                    contentType: 'application/pdf'
+                }
+            ]
+        };
 
-//         const info = await transporter.sendMail(mailOptions);
-//         console.log('Certificate email sent:', info.messageId);
-//     } catch (error) {
-//         console.error('Error sending email:', error);
-//     }
-// };
-
+        const info = await transporter.sendMail(mailOptions);
+        console.log('Certificate email sent:', info.messageId);
+    } catch (error) {
+        console.error('Error sending email:', error);
+    }
+};
 
 module.exports = {
-    generateCertificatePDF
+    generateCertificatePDF,
+    sendCertificateEmail
 };

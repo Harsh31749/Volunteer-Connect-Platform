@@ -98,7 +98,12 @@ const VolunteerDashboard = () => {
             }
         }
     };
-    // ------------------------------------------------------------------------
+    
+    // Helper to handle hash navigation from dashboard
+    const scrollToEvents = () => {
+         // Force navigation to home with hash
+         window.location.href = '/#events';
+    };
 
     if (loading) return <div className="text-center text-xl text-gray-700 mt-12">Loading your dashboard...</div>;
 
@@ -123,8 +128,6 @@ const VolunteerDashboard = () => {
                         <p className="text-2xl font-extrabold text-indigo-600">
                             Events Attended: <span className="font-extrabold">{metrics.totalEventsAttended || 0}</span>
                         </p>
-                        
-                        
                     </div>
                     
                     <Link 
@@ -162,13 +165,19 @@ const VolunteerDashboard = () => {
                     {upcoming.length === 0 ? (
                         <div className="p-4 bg-amber-400 rounded-lg border-l-4 border-gray-300 shadow-sm">
                             <p className="text-xl font-bold text-gray-600">You have no upcoming events. 
-                                <Link to="/events" className="text-indigo-600 hover:text-indigo-800 ml-1 font-medium">Browse Events</Link>
+                                {/* FIX: Changed to button with onClick to force hash navigation properly */}
+                                <button 
+                                    onClick={scrollToEvents}
+                                    className="text-indigo-600 hover:text-indigo-800 ml-1 font-medium underline focus:outline-none"
+                                >
+                                    Browse Events
+                                </button>
                             </p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             {upcoming.map(reg => (
-                                <div key={reg._id} className="bg-green p-4 border-l-4 border-indigo-500 rounded-lg shadow-md flex justify-between items-center space-x-4">
+                                <div key={reg._id} className="bg-pink-200 p-4 border-l-4 border-indigo-500 rounded-lg shadow-md flex justify-between items-center space-x-4">
                                     <div className="flex-grow">
                                         <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">{reg.event?.title || 'Unknown Event'}</h3>
                                         <p className="text-sm text-gray-600">

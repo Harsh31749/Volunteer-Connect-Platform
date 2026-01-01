@@ -20,16 +20,18 @@ const NavBar = () => {
     const handleEventsClick = (isMobile = false) => {
         setIsOpen(false); 
         
-        const targetId = 'opportunities-awaiting';
+        // FIX: Changed targetId from 'opportunities-awaiting' to 'events'
+        const targetId = 'events';
 
-        if (location.pathname === '/') {
-            // If already on the homepage, scroll directly
+        // Check if we are on the homepage ('/') OR the events page ('/events')
+        if (location.pathname === '/' || location.pathname === '/events') {
+            // If already on the event browser, scroll directly
             const targetElement = document.getElementById(targetId);
             if (targetElement) {
                 targetElement.scrollIntoView({ behavior: 'smooth' });
             }
         } else {
-            // If on a different page, navigate to the homepage with the hash
+            // If on a different page (like dashboard), navigate to home with the hash
             navigate(`/#${targetId}`);
         }
     };

@@ -26,7 +26,7 @@ export default function EventCard({ event }) {
 
   return (
     <div
-      className="relative shadow-xl rounded-xl overflow-hidden transition duration-300 hover:shadow-2xl"
+      className="relative shadow-xl rounded-xl overflow-hidden transition duration-300 hover:shadow-2xl border-2 border-indigo-100"
       style={{ width: '288px', height: '512px' }}
     >
       {/* Background Image */}
@@ -53,35 +53,33 @@ export default function EventCard({ event }) {
         <div className="flex-grow" />
 
         <div className="mt-auto bg-green-100/30 backdrop-blur-md rounded-lg p-2">
-        <p className="flex items-center mb-1">
-          <FontAwesomeIcon icon={faTag} className="mr-2 text-[#007B80]" />
-          <span className="text-[#007B80] font-semibold">
-            Category: {(event.category || 'Other').charAt(0).toUpperCase() + (event.category || 'Other').slice(1).toLowerCase()}
-          </span>
-        </p>
-        <p className="flex items-center mb-1">
-          <FontAwesomeIcon icon={faMapMarkerAlt} className="mr-2 text-[#5B9AD9]" />
-          <span className="text-[#5B9AD9] font-semibold">
-            Location: {(event.location || 'N/A').charAt(0).toUpperCase() + (event.location || 'N/A').slice(1).toLowerCase()}
-          </span>
-        </p>
-        <p className="flex items-center mb-1">
-          <FontAwesomeIcon icon={faCalendarAlt} className="mr-2 text-[#7A378B]" />
-          <span className="text-[#7A378B] font-semibold">Date: {date}</span>
-        </p>
-        <p className="flex items-center mb-2">
-          <FontAwesomeIcon icon={faUsers} className="mr-2 text-[#FFC72C]" />
-          <span className="text-[#FFC72C] font-semibold">Slots Available: {event.capacity ?? 'N/A'}</span>
-        </p>
-
+          <p className="flex items-center mb-1">
+            <FontAwesomeIcon icon={faTag} className="mr-2 text-[#007B80]" />
+            <span className="text-[#007B80] font-semibold">
+              Category: {(event.category || 'Other').charAt(0).toUpperCase() + (event.category || 'Other').slice(1).toLowerCase()}
+            </span>
+          </p>
+          <p className="flex items-center mb-1">
+            <FontAwesomeIcon icon={faMapMarkerAlt} className="mr-2 text-[#5B9AD9]" />
+            <span className="text-[#5B9AD9] font-semibold">
+              Location: {(event.location || 'N/A').charAt(0).toUpperCase() + (event.location || 'N/A').slice(1).toLowerCase()}
+            </span>
+          </p>
+          <p className="flex items-center mb-1">
+            <FontAwesomeIcon icon={faCalendarAlt} className="mr-2 text-[#7A378B]" />
+            <span className="text-[#7A378B] font-semibold">Date: {date}</span>
+          </p>
+          <p className="flex items-center mb-2">
+            <FontAwesomeIcon icon={faUsers} className="mr-2 text-[#FFC72C]" />
+            <span className="text-[#FFC72C] font-semibold">Slots Available: {event.capacity ?? 'N/A'}</span>
+          </p>
 
           <Link
             to={`/events/${event._id}`}
-            className="block w-full text-center bg-indigo-600 text-white py-2 rounded-lg font-semibold mt-2   hover:bg-indigo-700 hover:scale-105 hover:shadow-lg transition duration-200"
+            className="block w-full text-center bg-indigo-600 text-white py-2 rounded-lg font-semibold mt-2 hover:bg-indigo-700 hover:scale-105 hover:shadow-lg transition duration-200"
           >
             View Details & Apply
           </Link>
-
         </div>
       </div>
     </div>

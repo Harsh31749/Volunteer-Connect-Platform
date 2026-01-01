@@ -28,6 +28,11 @@ function App() {
                     {/* Public Routes */}
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
+                    
+                    {/* --- FIX START: Add this route --- */}
+                    <Route path="/events" element={<EventBrowser />} />
+                    {/* --- FIX END --- */}
+                    
                     <Route path="/" element={<EventBrowser />} /> 
                     <Route path="/events/:id" element={<EventDetails />} /> 
                     <Route path="/verify" element={<CertificateVerifier />} />

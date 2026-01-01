@@ -8,25 +8,25 @@ const PDFDocument = require('pdfkit');
 const emailService = require('../utils/emailService');
 
 const sendCertificate = (volunteer, event, ngoOrganizer, registrationId, ngoName) => {
-    return new Promise(async (resolve, reject) => {
-        const doc = new PDFDocument({ size: 'A4', layout: 'landscape' });
-        const buffers = [];
+    return new Promise((resolve, reject) => {
+        try {
+            const pdfStream = emailService.generateCertificatePDF(volunteer, event, ngoName, registrationId);
+            const buffers = [];
 
-        doc.on('data', buffers.push.bind(buffers));
-
-        doc.on('end', async () => {
-            try {
-                const certificateBuffer = Buffer.concat(buffers);
-                await emailService.sendCertificateEmail(volunteer, event, certificateBuffer, ngoName);
-                resolve();
-            } catch (err) {
-                reject(err);
-            }
-        });
-
-        emailService.generateCertificatePDF(doc, volunteer, event, ngoOrganizer.ngoName, registrationId);
-
-        doc.end();
+            pdfStream.on('data', chunk => buffers.push(chunk));
+            pdfStream.on('end', async () => {
+                try {
+                    const certificateBuffer = Buffer.concat(buffers);
+                    await emailService.sendCertificateEmail(volunteer, event, certificateBuffer, ngoName);
+                    resolve();
+                } catch (err) {
+                    reject(err);
+                }
+            });
+            pdfStream.on('error', err => reject(err));
+        } catch (err) {
+            reject(err);
+        }
     });
 };
 

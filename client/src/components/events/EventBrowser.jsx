@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import EventCard from './EventCard';
 import toast from 'react-hot-toast';
+import { useLocation } from 'react-router-dom';
 
 const backgroundImages = [
   '/image/homepage.png',
@@ -22,6 +23,8 @@ const EventBrowser = () => {
   const [nextImageIndex, setNextImageIndex] = useState(1);
   const [isFading, setIsFading] = useState(false);
   const [isNextImageLoaded, setIsNextImageLoaded] = useState(false);
+  
+  const locationHook = useLocation();
 
   const { search, category, location } = filters;
 
@@ -29,14 +32,13 @@ const EventBrowser = () => {
     setLoading(true);
     setError(null);
     try {
-      // Remove empty filters
       const validFilters = Object.fromEntries(
         Object.entries(filters).filter(([_, value]) => value !== '')
       );
       const query = new URLSearchParams(validFilters).toString();
 
-      const res = await axios.get(`/api/events?${query}`); // Adjust if backend returns { events: [...] }
-      setEvents(res.data?.events || res.data || []); // Safe fallback
+      const res = await axios.get(`/api/events?${query}`); 
+      setEvents(res.data?.events || res.data || []); 
     } catch (err) {
       console.error(err);
       toast.error(err);
@@ -77,6 +79,21 @@ const EventBrowser = () => {
     return () => clearInterval(interval);
   }, [isNextImageLoaded, nextImageIndex]);
 
+  // Robust Scroll Logic
+  useEffect(() => {
+    if (locationHook.hash === '#events') {
+      const element = document.getElementById('events');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        setTimeout(() => {
+          const retryElement = document.getElementById('events');
+          if (retryElement) retryElement.scrollIntoView({ behavior: 'smooth' });
+        }, 500);
+      }
+    }
+  }, [loading, locationHook]);
+
   const handleFilterChange = e => setFilters({ ...filters, [e.target.name]: e.target.value });
 
   const categories = ['Environment', 'Education', 'Health', 'Community', 'Other'];
@@ -91,7 +108,7 @@ const EventBrowser = () => {
   return (
     <div className="min-h-screen">
       {/* Slideshow hero */}
-      <div className="relative h-[75vh]">
+      <div className="relative h-[62.5vh]">
         <img src={nextImageUrl} alt="Next" className="absolute inset-0 w-full h-full object-cover z-5" />
         <img
           src={currentImageUrl}
@@ -105,11 +122,12 @@ const EventBrowser = () => {
           style={{ backgroundImage: 'linear-gradient(rgba(0,77,153,0.7), rgba(0,0,0,0.7))' }}
         />
 
-        <div className="relative container mx-auto px-4 py-20 lg:py-32 z-30 h-full flex flex-col justify-center text-center">
+        {/* CHANGED: py-20 lg:py-32 -> py-12 lg:py-24 to reduce padding for smaller height */}
+        <div className="relative container mx-auto px-4 py-12 lg:py-24 z-30 h-full flex flex-col justify-center text-center">
           <h1 className="text-white text-4xl lg:text-5xl font-extrabold drop-shadow-lg">
             Volunteer. Impact. Connect.
           </h1>
-          <p className="text-white text-lg lg:text-xl opacity-90 mb-12">
+          <p className="text-white text-lg lg:text-xl opacity-90 mb-8">
             Your next mission is waiting. Browse verified NGO opportunities globally.
           </p>
 
@@ -151,10 +169,10 @@ const EventBrowser = () => {
       </div>
 
       {/* Events Section */}
-      <div className="bg-gray-50 py-10" id="opportunities-awaiting">
+      <div className="bg-gray-50 py-10" id="events">
         <div className="container mx-auto px-4 max-w-6xl">
           <h2 className="text-3xl font-bold text-gray-900 mb-6 border-b-2 border-gray-200 pb-2">
-            Opportunities Awaiting
+            Events
           </h2>
 
           {loading && <p className="text-center text-gray-500 py-10">Loading events...</p>}
@@ -164,7 +182,8 @@ const EventBrowser = () => {
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-32">
+          {/* Preserving your gap request: gap-6 normally, gap-32 on large screens */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-32">
             {!loading && events.length === 0 ? (
               <div className="col-span-full p-6 bg-white rounded-lg border-l-4 border-indigo-500 shadow-md">
                 <p className="text-gray-700">No events match your current filters. Try broadening your search!</p>
