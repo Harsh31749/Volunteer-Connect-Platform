@@ -168,7 +168,7 @@ const VolunteerDashboard = () => {
                     ) : (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             {upcoming.map(reg => (
-                                <div key={reg._id} className="bg-white p-4 border-l-4 border-indigo-500 rounded-lg shadow-md flex justify-between items-center space-x-4">
+                                <div key={reg._id} className="bg-green p-4 border-l-4 border-indigo-500 rounded-lg shadow-md flex justify-between items-center space-x-4">
                                     <div className="flex-grow">
                                         <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">{reg.event?.title || 'Unknown Event'}</h3>
                                         <p className="text-sm text-gray-600">

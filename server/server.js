@@ -6,8 +6,6 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('./models/User');
 const jwt = require('jsonwebtoken');
-const userRoutes = require('./routes/userRoutes');
-const volunteerRoutes = require('./routes/volunteerRoutes');
 const cors = require('cors');
 require('dotenv').config();
 
@@ -15,7 +13,7 @@ const app = express();
 
 const connectDB = async () => {
     try {
-        await mongoose.connect(process.env.MONGO_URI); // Removed deprecated options
+        await mongoose.connect(process.env.MONGO_URI);
         console.log('MongoDB Connected Successfully!');
     } catch (err) {
         console.error(`MongoDB Connection Error: ${err.message}`);
@@ -30,13 +28,21 @@ app.use(session({
   saveUninitialized: true,
 }));
 
+// --- FIX START: Allow localhost:3000 ---
 app.use(cors({
-    origin: ['https://11c2c4db-0063-45f4-bbf2-01be374e81f7-00-32bfzhvgecfyu.kirk.replit.dev/', 'https://five-hotels-wash.loca.lt'],  // Replace with your actual Replit URL and Localtunnel URL
+    origin: [
+        'http://localhost:3000', // Allow your local React app
+        'https://11c2c4db-0063-45f4-bbf2-01be374e81f7-00-32bfzhvgecfyu.kirk.replit.dev/', 
+        'https://five-hotels-wash.loca.lt'
+    ],
+    credentials: true // Important for cookies/sessions if needed
 }));
+// --- FIX END ---
 
 app.use(passport.initialize());
 app.use(passport.session());
 
+// ... (Rest of your Passport strategy code remains the same) ...
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
@@ -54,7 +60,6 @@ passport.use(new GoogleStrategy({
       });
       await user.save();
     }
-
     done(null, user);
   } catch (err) {
     done(err, null);
@@ -72,44 +77,40 @@ passport.deserializeUser(async (id, done) => {
 });
 
 app.use(express.json());
-app.use(express.static('public'));
+
+// Routes
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/events', require('./routes/eventRoutes'));
 app.use('/api/registrations', require('./routes/registrationRoutes'));
 app.use('/api/volunteers', require('./routes/volunteerRoutes'));
 app.use('/api/ngo', require('./routes/ngoRoutes'));
-app.use('/api/volunteers', require('./routes/volunteerRoutes'));
-app.use(express.static(path.join('public')));
 
-if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development') { 
-    
+// Serve Static Assets in Production
+if (process.env.NODE_ENV === 'production') { 
     app.use(express.static(path.join(__dirname, '..', 'client', 'build')));
     app.get('*', (req, res) => {
         res.sendFile(path.resolve(__dirname, '..', 'client', 'build', 'index.html'));
     });
 }
 
+// ... (Passport Routes remain the same) ...
 app.get('/auth/google',
   passport.authenticate('google', { scope: ['profile', 'email'] })
 );
-
 
 app.get('/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/login', session: false }),
   (req, res) => {
     const user = req.user;
     const token = jwt.sign(
-      { id: user._id, email: user.email, role: user.role }, // <-- FIX IS HERE
+      { id: user._id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
-
-    console.log('Generated token:', token); 
-
+    // Ensure this redirects to localhost:3000 in development
     res.redirect(`http://localhost:3000/social-login-success?token=${token}`);
   }
 );
-
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
